@@ -158,41 +158,34 @@ class AcademicRecord(Base):
             'recorded_date': self.recorded_date.isoformat() if self.recorded_date else None
         }
 
-# ============================================
-# ATTENDANCE MODEL
-# ============================================
+
+
 class Attendance(Base):
-    """Daily attendance records"""
     __tablename__ = 'attendance'
     
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey('students.id', ondelete='CASCADE'), nullable=False, index=True)
-    attendance_date = Column(Date, nullable=False, index=True)
-    status = Column(String(20), nullable=False)  # present, absent, late, excused
-    period = Column(String(20), default='all_day')
-    arrival_time = Column(Time)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(Integer, ForeignKey('students.id'), nullable=False)
+    attendance_date = Column(Date, nullable=False)
+    status = Column(String(20), nullable=False)
+    remarks = Column(Text)  # ← ADD THIS IF MISSING
     marked_by = Column(Integer, ForeignKey('users.id'))
-    notes = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     # Relationships
     student = relationship("Student", back_populates="attendance_records")
-    marker = relationship("User", back_populates="attendances_marked")
-    
-    def __repr__(self):
-        return f"<Attendance(student_id={self.student_id}, date={self.attendance_date}, status='{self.status}')>"
+    marker = relationship("User", foreign_keys=[marked_by])
     
     def to_dict(self):
-        """Convert to dictionary"""
         return {
             'id': self.id,
             'student_id': self.student_id,
-            'attendance_date': self.attendance_date.isoformat() if self.attendance_date else None,
+            'attendance_date': str(self.attendance_date),
             'status': self.status,
-            'period': self.period,
-            'arrival_time': self.arrival_time.isoformat() if self.arrival_time else None,
+            'remarks': self.remarks,  # ← ADD THIS IF MISSING
             'marked_by': self.marked_by,
-            'notes': self.notes
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 # ============================================

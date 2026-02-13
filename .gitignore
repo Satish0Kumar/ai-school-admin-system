@@ -4,9 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -25,34 +22,55 @@ wheels/
 
 # Virtual Environment
 venv/
-ENV/
 env/
+ENV/
+.venv
 
-# IDEs
+# Environment Variables
+.env
+.env.local
+*.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# ML Models (if large)
+# backend/ml_model/best_model.pkl
+# backend/ml_model/scaler.pkl
+# backend/ml_model/label_encoders.pkl
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# Environment Variables
-.env
-.env.local
-
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# OS
 .DS_Store
-Thumbs.db
 
 # Logs
 *.log
+logs/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Test files
+test_*.py
+*_test.py
 
 # Cache
 .cache/
 .pytest_cache/
 
-# Streamlit
-.streamlit/
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Operating System
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp

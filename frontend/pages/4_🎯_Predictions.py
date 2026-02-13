@@ -125,11 +125,93 @@ if students:
     with col2:
         if st.button("🎯 Predict", type="primary", use_container_width=True):
             student_id = student_options[selected]
-            with st.spinner("Making prediction..."):
+            with st.spinner("🤖 Making prediction with ML model..."):
                 result = APIClient.make_prediction(student_id)
+                
                 if 'error' not in result:
-                    st.success(f"✅ Prediction: {result['risk_label']} ({result['confidence_score']:.1f}% confidence)")
+                    risk_label = result['risk_label']
+                    confidence = result['confidence_score']
+                    model_version = result.get('model_version', 'Unknown')
+                    
+                    # Display result in a nice box
+                    st.markdown("---")
+                    st.markdown("### 🎯 Prediction Result")
+                    
+                    col_a, col_b, col_c = st.columns(3)
+                    
+                    with col_a:
+                        risk_color = {
+                            'Low': '#10b981',
+                            'Medium': '#f59e0b', 
+                            'High': '#ef4444',
+                            'Critical': '#b91c1c'
+                        }.get(risk_label, '#6b7280')
+                        
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; border: 3px solid {risk_color};">
+                            <p style="margin: 0; font-size: 0.9rem; color: #4a5568;">Risk Level</p>
+                            <p style="margin: 0.5rem 0; font-size: 2rem; font-weight: 800; color: {risk_color};">{risk_label}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_b:
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #4a5568;">Confidence</p>
+                            <p style="margin: 0.5rem 0; font-size: 2rem; font-weight: 800; color: #2563eb;">{confidence:.1f}%</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_c:
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #4a5568;">Model Version</p>
+                            <p style="margin: 0.5rem 0; font-size: 1.5rem; font-weight: 800; color: #8b5cf6;">{model_version}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Show probabilities
+                    st.markdown("#### 📊 Probability Distribution")
+                    prob_data = {
+                        'Risk Level': ['Low', 'Medium', 'High', 'Critical'],
+                        'Probability': [
+                            result['probability_low'],
+                            result['probability_medium'],
+                            result['probability_high'],
+                            result['probability_critical']
+                        ]
+                    }
+                    
+                    import plotly.express as px
+                    fig = px.bar(
+                        prob_data,
+                        x='Risk Level',
+                        y='Probability',
+                        color='Risk Level',
+                        color_discrete_map={
+                            'Low': '#10b981',
+                            'Medium': '#f59e0b',
+                            'High': '#ef4444',
+                            'Critical': '#b91c1c'
+                        },
+                        text='Probability'
+                    )
+                    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+                    fig.update_layout(
+                        showlegend=False,
+                        height=300,
+                        plot_bgcolor='white',
+                        paper_bgcolor='white',
+                        font=dict(color='#1a202c')
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    st.success(f"✅ Prediction complete! Model: {model_version}")
                     st.balloons()
-                    st.rerun()
+                    
+                    if st.button("🔄 Make Another Prediction"):
+                        st.rerun()
+                        
                 else:
-                    st.error(f"❌ {result['error']}")
+                    st.error(f"❌ Error: {result['error']}")
+                    st.info("💡 Make sure the student has academic records before making a prediction.")

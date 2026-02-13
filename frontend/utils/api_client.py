@@ -264,6 +264,146 @@ class APIClient:
         except Exception as e:
             return []
     
+
+
+
+    # ============================================
+    # ATTENDANCE
+    # ============================================
+    
+    @staticmethod
+    def mark_attendance(student_id: int, date: str, status: str, remarks: str = None) -> Dict:
+        """Mark attendance for a student"""
+        try:
+            response = requests.post(
+                f"{APIClient.BASE_URL}/attendance/mark",
+                headers=APIClient.get_headers(),
+                json={
+                    'student_id': student_id,
+                    'date': date,
+                    'status': status,
+                    'remarks': remarks
+                },
+                timeout=5
+            )
+            
+            if response.status_code in [200, 201]:
+                return response.json()
+            return {'error': response.json().get('error', 'Failed to mark attendance')}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    @staticmethod
+    def mark_bulk_attendance(attendance_list: List[Dict]) -> Dict:
+        """Mark attendance for multiple students"""
+        try:
+            response = requests.post(
+                f"{APIClient.BASE_URL}/attendance/bulk",
+                headers=APIClient.get_headers(),
+                json={'attendance_list': attendance_list},
+                timeout=10
+            )
+            
+            if response.status_code in [200, 201]:
+                return response.json()
+            return {'error': response.json().get('error', 'Failed to mark bulk attendance')}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    @staticmethod
+    def get_student_attendance(student_id: int, start_date: str = None, end_date: str = None) -> List[Dict]:
+        """Get attendance records for a student"""
+        try:
+            params = {}
+            if start_date:
+                params['start_date'] = start_date
+            if end_date:
+                params['end_date'] = end_date
+            
+            response = requests.get(
+                f"{APIClient.BASE_URL}/students/{student_id}/attendance",
+                headers=APIClient.get_headers(),
+                params=params,
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            return []
+        except Exception as e:
+            st.error(f"Error fetching attendance: {e}")
+            return []
+    
+    @staticmethod
+    def get_attendance_stats(student_id: int, days: int = 30) -> Dict:
+        """Get attendance statistics"""
+        try:
+            response = requests.get(
+                f"{APIClient.BASE_URL}/students/{student_id}/attendance/stats",
+                headers=APIClient.get_headers(),
+                params={'days': days},
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            return {'error': 'Failed to get stats'}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    @staticmethod
+    def get_daily_attendance(date: str, grade: int = None, section: str = None) -> List[Dict]:
+        """Get daily attendance for all students"""
+        try:
+            params = {'date': date}
+            
+            # Only add params if they're not None
+            if grade is not None:
+                params['grade'] = str(grade)
+            if section is not None:
+                params['section'] = section
+            
+            print(f"🔍 Frontend API Client calling with params: {params}")  # Debug
+            
+            response = requests.get(
+                f"{APIClient.BASE_URL}/attendance/daily",
+                headers=APIClient.get_headers(),
+                params=params,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Frontend API Client received {len(data)} students")  # Debug
+                return data
+            else:
+                print(f"❌ Frontend API Client error: {response.status_code}")
+                return []
+        except Exception as e:
+            print(f"❌ Frontend API Client exception: {e}")
+            return []
+
+    
+    @staticmethod
+    def get_low_attendance_students(threshold: float = 75.0, days: int = 30) -> List[Dict]:
+        """Get students with low attendance"""
+        try:
+            response = requests.get(
+                f"{APIClient.BASE_URL}/attendance/low-attendance",
+                headers=APIClient.get_headers(),
+                params={'threshold': threshold, 'days': days},
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            return []
+        except Exception as e:
+            return []
+
+
+
+
     # ============================================
     # SYSTEM
     # ============================================

@@ -1,3 +1,34 @@
+
+
+
+"""
+Risk Prediction Service - ML Model Integration
+ScholarSense - AI-Powered Academic Intelligence System
+"""
+# Fix numpy random state issue for model loading
+import sys
+import os
+
+# Suppress warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+# Fix numpy compatibility
+try:
+    import numpy as np
+    # Workaround for numpy random state loading issue
+    import numpy.random._pickle
+except:
+    pass
+
+import pickle
+from datetime import datetime
+# ... rest of imports
+
+
+
+
+
 """
 Risk Prediction Service - ML Model Integration
 ScholarSense - AI-Powered Academic Intelligence System
@@ -13,23 +44,55 @@ from sqlalchemy import func, desc
 class PredictionService:
     """Handle ML-based risk predictions"""
     
-    # Load ML model (your existing model from December)
-    MODEL_PATH = 'models/saved_models/risk_model.pkl'
+    # Model paths
+    MODEL_DIR = 'models/saved_models'
+    MODEL_PATH = os.path.join(MODEL_DIR, 'best_model.pkl')
+    SCALER_PATH = os.path.join(MODEL_DIR, 'scaler.pkl')
+    ENCODER_PATH = os.path.join(MODEL_DIR, 'label_encoders.pkl')
+    METADATA_PATH = os.path.join(MODEL_DIR, 'model_metadata.pkl')
+    
+    # Model components
     model = None
+    scaler = None
+    label_encoders = None
+    metadata = None
     
     @classmethod
     def load_model(cls):
-        """Load the trained ML model"""
+        """Load the trained ML model and preprocessing components"""
         try:
+            # Load main model
             if os.path.exists(cls.MODEL_PATH):
                 with open(cls.MODEL_PATH, 'rb') as f:
                     cls.model = pickle.load(f)
                 print(f"✅ ML Model loaded from {cls.MODEL_PATH}")
-                return True
             else:
                 print(f"⚠️  ML Model not found at {cls.MODEL_PATH}")
-                print(f"   Using dummy predictions for now")
+                print(f"   Using dummy predictions")
                 return False
+            
+            # Load scaler (if exists)
+            if os.path.exists(cls.SCALER_PATH):
+                with open(cls.SCALER_PATH, 'rb') as f:
+                    cls.scaler = pickle.load(f)
+                print(f"✅ Scaler loaded from {cls.SCALER_PATH}")
+            
+            # Load label encoders (if exists)
+            if os.path.exists(cls.ENCODER_PATH):
+                with open(cls.ENCODER_PATH, 'rb') as f:
+                    cls.label_encoders = pickle.load(f)
+                print(f"✅ Label encoders loaded from {cls.ENCODER_PATH}")
+            
+            # Load metadata (if exists)
+            if os.path.exists(cls.METADATA_PATH):
+                with open(cls.METADATA_PATH, 'rb') as f:
+                    cls.metadata = pickle.load(f)
+                print(f"✅ Metadata loaded from {cls.METADATA_PATH}")
+                if 'feature_names' in cls.metadata:
+                    print(f"   Expected features: {cls.metadata['feature_names']}")
+            
+            return True
+            
         except Exception as e:
             print(f"❌ Error loading model: {e}")
             return False
@@ -79,14 +142,14 @@ class PredictionService:
                 BehavioralIncident.incident_date >= ninety_days_ago
             ).scalar() or 0
             
-            # Prepare features (matching your ML model's expected features)
+            # Prepare features dictionary (matching your model's expected features)
             features = {
                 'student_id': student.student_id,
                 'age': student.age or 15,
                 'grade': student.grade,
-                'gender': 1 if student.gender == 'Male' else 0,
-                'socioeconomic_status': {'Low': 0, 'Medium': 1, 'High': 2}.get(student.socioeconomic_status, 1),
-                'parent_education': {'None': 0, 'High School': 1, 'Graduate': 2, 'Post-Graduate': 3}.get(student.parent_education, 1),
+                'gender': student.gender,  # Will be encoded if needed
+                'socioeconomic_status': student.socioeconomic_status or 'Medium',
+                'parent_education': student.parent_education or 'High School',
                 'current_gpa': float(academic.current_gpa) if academic.current_gpa else 75.0,
                 'previous_gpa': float(academic.previous_gpa) if academic.previous_gpa else 75.0,
                 'grade_trend': float(academic.grade_trend) if academic.grade_trend else 0.0,
@@ -106,6 +169,60 @@ class PredictionService:
             db.close()
     
     @staticmethod
+    def encode_and_scale_features(features: dict):
+        """
+        Apply label encoding and scaling to features
+        Returns: numpy array ready for model prediction
+        """
+        # Define feature order (adjust based on your model's training)
+        feature_order = [
+            'age', 'grade', 'gender', 'socioeconomic_status', 'parent_education',
+            'current_gpa', 'previous_gpa', 'grade_trend', 'attendance_rate',
+            'failed_subjects', 'assignment_submission_rate', 'behavioral_incidents',
+            'math_score', 'science_score', 'english_score', 'social_score', 'language_score'
+        ]
+        
+        # Use metadata feature order if available
+        if PredictionService.metadata and 'feature_names' in PredictionService.metadata:
+            feature_order = PredictionService.metadata['feature_names']
+        
+        # Encode categorical variables
+        encoded_features = {}
+        for key, value in features.items():
+            if key in ['gender', 'socioeconomic_status', 'parent_education']:
+                # Use label encoders if available
+                if PredictionService.label_encoders and key in PredictionService.label_encoders:
+                    try:
+                        encoded_features[key] = PredictionService.label_encoders[key].transform([value])[0]
+                    except:
+                        # Fallback manual encoding
+                        if key == 'gender':
+                            encoded_features[key] = 1 if value == 'Male' else 0
+                        elif key == 'socioeconomic_status':
+                            encoded_features[key] = {'Low': 0, 'Medium': 1, 'High': 2}.get(value, 1)
+                        elif key == 'parent_education':
+                            encoded_features[key] = {'None': 0, 'High School': 1, 'Graduate': 2, 'Post-Graduate': 3}.get(value, 1)
+                else:
+                    # Manual encoding
+                    if key == 'gender':
+                        encoded_features[key] = 1 if value == 'Male' else 0
+                    elif key == 'socioeconomic_status':
+                        encoded_features[key] = {'Low': 0, 'Medium': 1, 'High': 2}.get(value, 1)
+                    elif key == 'parent_education':
+                        encoded_features[key] = {'None': 0, 'High School': 1, 'Graduate': 2, 'Post-Graduate': 3}.get(value, 1)
+            else:
+                encoded_features[key] = value
+        
+        # Create feature array in correct order
+        feature_array = np.array([[encoded_features[feat] for feat in feature_order]])
+        
+        # Apply scaling if scaler exists
+        if PredictionService.scaler:
+            feature_array = PredictionService.scaler.transform(feature_array)
+        
+        return feature_array
+    
+    @staticmethod
     def make_prediction(student_id: int, predicted_by: int = None):
         """
         Make risk prediction for a student
@@ -122,34 +239,26 @@ class PredictionService:
             if 'error' in features:
                 return features
             
-            # Prepare feature array for model (17 features)
-            feature_array = np.array([[
-                features['age'],
-                features['grade'],
-                features['gender'],
-                features['socioeconomic_status'],
-                features['parent_education'],
-                features['current_gpa'],
-                features['previous_gpa'],
-                features['grade_trend'],
-                features['attendance_rate'],
-                features['failed_subjects'],
-                features['assignment_submission_rate'],
-                features['behavioral_incidents'],
-                features['math_score'],
-                features['science_score'],
-                features['english_score'],
-                features['social_score'],
-                features['language_score']
-            ]])
-            
             # Make prediction
             if PredictionService.model is not None:
-                # Use actual model
-                risk_level = PredictionService.model.predict(feature_array)[0]
-                probabilities = PredictionService.model.predict_proba(feature_array)[0]
+                # Use actual trained model
+                feature_array = PredictionService.encode_and_scale_features(features)
+                
+                # Predict
+                risk_level = int(PredictionService.model.predict(feature_array)[0])
+                
+                # Get probabilities
+                if hasattr(PredictionService.model, 'predict_proba'):
+                    probabilities = PredictionService.model.predict_proba(feature_array)[0]
+                else:
+                    # If model doesn't support predict_proba, create one-hot
+                    probabilities = [0.0, 0.0, 0.0, 0.0]
+                    probabilities[risk_level] = 1.0
+                
+                print(f"🤖 ML Model Prediction: Risk Level {risk_level}")
+                
             else:
-                # Dummy prediction based on GPA (for testing without model)
+                # Fallback to dummy prediction
                 gpa = features['current_gpa']
                 if gpa >= 80:
                     risk_level = 0  # Low
@@ -163,27 +272,40 @@ class PredictionService:
                 else:
                     risk_level = 3  # Critical
                     probabilities = [0.02, 0.08, 0.20, 0.70]
+                
+                print(f"⚠️  Dummy Prediction: Risk Level {risk_level}")
             
             # Map risk level to label
             risk_labels = {0: 'Low', 1: 'Medium', 2: 'High', 3: 'Critical'}
-            risk_label = risk_labels[risk_level]
+            risk_label = risk_labels.get(risk_level, 'Low')
+            
+            # Ensure we have 4 probabilities
+            if len(probabilities) < 4:
+                probabilities = list(probabilities) + [0.0] * (4 - len(probabilities))
             
             # Get confidence score (probability of predicted class)
-            confidence_score = probabilities[risk_level] * 100
-            
+            confidence_score = float(probabilities[risk_level] * 100)
+
+            # Convert numpy arrays to native Python types
+            prob_low = float(probabilities[0] * 100)
+            prob_medium = float(probabilities[1] * 100)
+            prob_high = float(probabilities[2] * 100)
+            prob_critical = float(probabilities[3] * 100)
+
             # Save prediction to database
             prediction = RiskPrediction(
                 student_id=student_id,
-                prediction_date=datetime.utcnow(),
+                prediction_date=datetime.now(),
                 risk_level=int(risk_level),
                 risk_label=risk_label,
                 confidence_score=confidence_score,
-                probability_low=probabilities[0] * 100,
-                probability_medium=probabilities[1] * 100,
-                probability_high=probabilities[2] * 100,
-                probability_critical=probabilities[3] * 100,
+                probability_low=prob_low,
+                probability_medium=prob_medium,
+                probability_high=prob_high,
+                probability_critical=prob_critical,
+
                 features_used=features,
-                model_version='1.0',
+                model_version='2.0' if PredictionService.model else '1.0-dummy',
                 predicted_by=predicted_by
             )
             
@@ -195,6 +317,8 @@ class PredictionService:
         except Exception as e:
             db.rollback()
             print(f"❌ Prediction error: {e}")
+            import traceback
+            traceback.print_exc()
             return {'error': str(e)}
         finally:
             db.close()
@@ -267,7 +391,7 @@ PredictionService.load_model()
 # Test function
 if __name__ == "__main__":
     print("=" * 60)
-    print("🧪 TESTING PREDICTION SERVICE")
+    print("🧪 TESTING PREDICTION SERVICE WITH ACTUAL MODEL")
     print("=" * 60)
     
     # Get first student with academic records
@@ -288,12 +412,13 @@ if __name__ == "__main__":
             print(f"   ❌ {features['error']}")
         
         # Test 2: Make prediction
-        print("\n2. Making prediction...")
+        print("\n2. Making prediction with actual model...")
         prediction = PredictionService.make_prediction(student_id)
         if 'error' not in prediction:
             print(f"   ✅ Prediction made!")
             print(f"      Risk Level: {prediction['risk_label']}")
             print(f"      Confidence: {prediction['confidence_score']:.1f}%")
+            print(f"      Model Version: {prediction.get('model_version', 'N/A')}")
         else:
             print(f"   ❌ {prediction['error']}")
         

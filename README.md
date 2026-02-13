@@ -1,171 +1,277 @@
-# AI-Based Smart School Administration System
+# ScholarSense - AI-Powered Academic Intelligence System
 
-## Module 1: Early Warning System for Student Risk Detection
+## 🎓 Overview
+ScholarSense is a comprehensive school administration system with AI-powered student dropout risk prediction, designed to help educators identify and support at-risk students proactively.
 
-An AI-powered system to identify at-risk students using machine learning with 98% accuracy.
+## ✨ Features
 
----
+### Core Functionality
+- **Student Management** - Complete CRUD operations for student records
+- **Academic Tracking** - Monitor GPA, grades, and academic performance
+- **Risk Prediction** - ML-based dropout risk assessment
+- **User Authentication** - Secure JWT-based authentication
+- **Role-Based Access** - Admin and Teacher roles with different permissions
+- **Interactive Dashboard** - Real-time metrics and visualizations
 
-## 🎯 Current Status
+### Key Modules
+1. **Module 1: Risk Prediction Engine** ✅ COMPLETE
+   - AI/ML-based risk classification (Low, Medium, High, Critical)
+   - Confidence scoring and probability distribution
+   - Feature-based predictions using 17+ data points
 
-**Module 1:** ✅ Phase 1 Complete (Project Setup)
-- Risk Detection Model: 98% Accuracy (Gradient Boosting)
-- Frontend: Streamlit 1.52.2
-- Backend: Flask REST API 3.1.2
-- Architecture: Hybrid (Streamlit + Flask API)
+2. **Student Management System** ✅ COMPLETE
+   - Add, view, edit, and manage student records
+   - Search and filter functionality
+   - Detailed student profiles
 
----
+3. **Academic Records System** ✅ COMPLETE
+   - Track semester-wise performance
+   - Subject-wise scoring
+   - GPA trends and analysis
 
-## 📁 Project Structure
-
-ai-school-admin-system/
-├── frontend/ # Streamlit UI
-│ ├── pages/ # Multi-page app pages
-│ ├── utils/ # Helper functions
-│ ├── assets/ # Images, CSS
-│ └── app.py # Main Streamlit app
-├── backend/ # Flask REST API
-│ ├── routes/ # API endpoints
-│ ├── services/ # Business logic
-│ ├── utils/ # Utilities
-│ ├── config/ # Configuration
-│ └── api.py # Main Flask app
-├── models/ # Trained ML models
-│ └── saved_models/ # Pickled models
-├── data/ # Datasets
-│ ├── raw/ # Original data
-│ ├── processed/ # Preprocessed data
-│ └── synthetic/ # Generated data
-├── docs/ # Documentation
-├── tests/ # Test files
-└── scripts/ # Utility scripts
-
-
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Streamlit 1.52.2** - Web UI framework
-- **Plotly 6.5.0** - Interactive visualizations
-- **pandas 2.3.3** - Data manipulation
-- **numpy 2.4.0** - Numerical computing
+## 🏗️ Tech Stack
 
 ### Backend
-- **Flask 3.1.2** - REST API framework
-- **Flask-CORS 6.0.2** - Cross-origin support
-- **Flask-RESTful 0.3.10** - REST utilities
+- **Framework:** Flask (Python)
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy
+- **Authentication:** JWT with Flask-JWT-Extended
+- **Password Security:** bcrypt
+- **API:** RESTful architecture
+
+### Frontend
+- **Framework:** Streamlit
+- **Charts:** Plotly
+- **HTTP Client:** Requests
 
 ### Machine Learning
-- **scikit-learn 1.8.0** - ML algorithms
-- **Gradient Boosting** - 98% accuracy model
-- **SMOTE** - Class balancing
-- **17 engineered features**
+- **Model:** Scikit-learn (Gradient Boosting/Random Forest)
+- **Features:** 17 student attributes
+- **Output:** 4-level risk classification
 
----
+## 📊 System Architecture
 
-## 🚀 Installation
-
-### Prerequisites
-- Python 3.10+
-- pip package manager
-
-### Setup Steps
-
-Clone repository (if using Git)
-git clone <repository-url>
-cd ai-school-admin-system
-
-Create virtual environment
-python -m venv venv
-
-Activate virtual environment
-Windows:
-venv\Scripts\activate
-
-Linux/Mac:
-source venv/bin/activate
-
-Install dependencies
-pip install -r backend/requirements.txt
-pip install -r frontend/requirements.txt
+┌─────────────────────────────────────────────────────────┐
+│ Streamlit Frontend │
+│ (Login, Dashboard, Students, Profile, Predictions) │
+└───────────────────┬─────────────────────────────────────┘
+│ HTTP/REST API
+┌───────────────────▼─────────────────────────────────────┐
+│ Flask Backend │
+│ (Authentication, Business Logic, ML Integration) │
+└───────────────────┬─────────────────────────────────────┘
+│ SQLAlchemy ORM
+┌───────────────────▼─────────────────────────────────────┐
+│ PostgreSQL Database │
+│ (Students, Academic Records, Predictions, Users) │
+└─────────────────────────────────────────────────────────┘
 
 text
 
----
+## 🚀 Installation & Setup
 
-## 📊 Model Performance
+### Prerequisites
+- Python 3.10+
+- PostgreSQL 14+
+- pip (Python package manager)
 
-| Metric | Value |
-|--------|-------|
-| **Accuracy** | 98.00% |
-| **Precision** | 98.03% |
-| **Recall** | 98.00% |
-| **F1-Score** | 98.00% |
-| **ROC-AUC** | 99.94% |
-| **Test Samples** | 200 |
-| **Correct Predictions** | 196/200 |
+### Step 1: Clone Repository
+```bash
+git clone <repository-url>
+cd ai-school-admin-system
+Step 2: Create Virtual Environment
+bash
+python -m venv venv
+.\venv\Scripts\Activate  # Windows
+source venv/bin/activate # Linux/Mac
+Step 3: Install Dependencies
+bash
+pip install flask flask-cors flask-jwt-extended python-dotenv
+pip install sqlalchemy psycopg2-binary bcrypt
+pip install streamlit plotly pandas requests
+Step 4: Setup Database
+bash
+# Create PostgreSQL database
+psql -U postgres
+CREATE DATABASE scholarsense;
+CREATE USER scholar_admin WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE scholarsense TO scholar_admin;
+\q
 
----
+# Initialize schema
+psql -U scholar_admin -d scholarsense -f backend/database/schema.sql
+Step 5: Configure Environment
+Create .env file:
 
-## 🎯 Features
+text
+# Database
+DB_NAME=scholarsense
+DB_USER=scholar_admin
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
 
-### Current (Module 1)
-- ✅ Student risk level prediction (Low, Medium, High, Critical)
-- ✅ Confidence scores for each prediction
-- ✅ Interactive web interface
-- ✅ REST API for integrations
-- ✅ Real-time predictions
+# Security
+SECRET_KEY=your-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-key
+JWT_ACCESS_TOKEN_EXPIRES=3600
 
-### Planned (Modules 2-4)
-- ⏳ Behavioral pattern analysis
-- ⏳ Attendance prediction
-- ⏳ Institutional performance dashboard
+# Application
+PROJECT_NAME=ScholarSense
+FLASK_ENV=development
+Step 6: Create Default Users
+bash
+python -m backend.auth.auth_service
+Step 7: Start Backend API
+bash
+python backend/api.py
+API will run on: http://localhost:5000
 
----
+Step 8: Start Frontend (New Terminal)
+bash
+streamlit run frontend/app.py
+UI will open at: http://localhost:8501
 
-## 👨‍💻 Author
+🔐 Default Credentials
+Admin Account:
 
-Developed as part of B.Tech Final Year Project
-Institution: [Your College Name]
-Year: 2024-2025
+Email: admin@scholarsense.com
 
----
+Password: admin123
 
-## 📅 Development Timeline
+Teacher Account:
 
-- **Phase 1:** ✅ Project Setup (Dec 25, 2025)
-- **Phase 2:** 🔄 Backend Development (In Progress)
-- **Phase 3:** ⏳ Frontend Development
-- **Phase 4:** ⏳ Integration & Testing
-- **Phase 5:** ⏳ Documentation & Polish
+Email: teacher@scholarsense.com
 
----
+Password: teacher123
 
-## 📝 License
+📁 Project Structure
+text
+ai-school-admin-system/
+├── backend/
+│   ├── api.py                      # Flask REST API
+│   ├── database/
+│   │   ├── schema.sql              # Database schema
+│   │   ├── db_config.py            # Database configuration
+│   │   └── models.py               # SQLAlchemy models
+│   ├── auth/
+│   │   └── auth_service.py         # Authentication service
+│   └── services/
+│       ├── student_service.py      # Student CRUD
+│       ├── academic_service.py     # Academic records
+│       └── prediction_service.py   # ML predictions
+├── frontend/
+│   ├── app.py                      # Login page
+│   ├── pages/
+│   │   ├── 1_📊_Dashboard.py      # Main dashboard
+│   │   ├── 2_👥_Students.py       # Student list
+│   │   ├── 3_👤_Student_Profile.py # Student details
+│   │   └── 4_🎯_Predictions.py    # Risk predictions
+│   └── utils/
+│       ├── api_client.py           # API communication
+│       └── session_manager.py      # Session handling
+├── models/
+│   └── saved_models/               # ML model files
+├── .env                            # Environment variables
+└── README.md                       # Documentation
+🎯 API Endpoints
+Authentication
+POST /api/auth/login - User login
 
-Educational Project - All Rights Reserved
+GET /api/auth/verify - Verify token
+
+GET /api/auth/me - Get current user
+
+Students
+GET /api/students - List all students
+
+GET /api/students/{id} - Get student by ID
+
+POST /api/students - Create student
+
+PUT /api/students/{id} - Update student
+
+DELETE /api/students/{id} - Delete student
+
+Academic Records
+GET /api/students/{id}/academics - Get student's records
+
+POST /api/academics - Create academic record
+
+PUT /api/academics/{id} - Update record
+
+Predictions
+POST /api/students/{id}/predict - Make prediction
+
+GET /api/students/{id}/predictions - Get prediction history
+
+GET /api/predictions/high-risk - Get high-risk students
+
+📈 Usage
+1. Login
+Access http://localhost:8501 and login with credentials
+
+2. View Dashboard
+See overview of students, metrics, and risk distribution
+
+3. Manage Students
+Add, view, edit student records
+
+4. Add Academic Records
+Enter semester grades and performance data
+
+5. Make Predictions
+Generate risk predictions for students
+
+6. Monitor High-Risk Students
+View and track students needing intervention
+
+🔧 Development
+Run Tests
+bash
+python -m backend.services.student_service
+python -m backend.services.academic_service
+python -m backend.services.prediction_service
+Database Queries
+bash
+psql -U scholar_admin -d scholarsense
+📊 Current Status
+✅ Completed:
+
+Database design and implementation
+
+JWT authentication system
+
+REST API (30+ endpoints)
+
+Student management
+
+Academic records tracking
+
+ML prediction engine (with dummy model)
+
+Complete Streamlit UI
+
+End-to-end workflow
+
+🔄 In Progress:
+
+Actual ML model integration
+
+Attendance tracking module
+
+Behavioral incident logging
+
+🤝 Contributing
+Contributions welcome! Please create issues and pull requests.
+
+📝 License
+Educational Project - 2026
+
+👨‍💻 Developer
+Built with ❤️ by [Your Name]
+Final Year B.Tech Project
+
+Note: This is an educational project demonstrating full-stack development with AI/ML integration.
 
 
-
-# Deployment Guide
-
-## Local Deployment
-Backend: http://127.0.0.1:5000  
-Frontend: http://localhost:8501
-
-## Local Network Deployment
-Change API host to 0.0.0.0  
-Update frontend API_BASE_URL  
-Allow ports 5000 & 8501 in firewall
-
-## Cloud Deployment
-Use Gunicorn for backend  
-Deploy frontend using Streamlit Cloud
-
-## Security & Performance
-- Enable HTTPS
-- Add authentication
-- Add rate limiting
-- Enable logging & monitoring
