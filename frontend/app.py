@@ -1,226 +1,236 @@
 """
-Main Streamlit Application
-AI-Based Smart School Administration System - Module 1
+ScholarSense - Main Application
+AI-Powered Academic Intelligence System
 """
-import streamlit as st
 import sys
 from pathlib import Path
 
-# Add frontend to path
-sys.path.append(str(Path(__file__).resolve().parent))
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+import streamlit as st
+from frontend.utils.session_manager import SessionManager
+from frontend.utils.api_client import APIClient
 
 # Page configuration
 st.set_page_config(
-    page_title="AI School Admin System",
+    page_title="ScholarSense - Login",
     page_icon="🎓",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
+# Initialize session
+SessionManager.initialize_session()
+
+# Professional CSS with HIGH CONTRAST
 st.markdown("""
 <style>
-    .main-header {
+    /* Clean white background */
+    .main {
+        background-color: #f7fafc;
+    }
+    .stApp {
+        background-color: #f7fafc;
+    }
+    
+    /* Login container - white with shadow */
+    .login-box {
+        background: white;
+        padding: 3rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        max-width: 450px;
+        margin: 2rem auto;
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Logo and title */
+    .logo {
+        text-align: center;
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    .app-title {
+        text-align: center;
+        color: #1a202c;
         font-size: 2.5rem;
-        color: #667eea;
-        text-align: center;
+        font-weight: 800;
         margin-bottom: 0.5rem;
-        font-weight: bold;
+        letter-spacing: -0.5px;
     }
-    .sub-header {
-        font-size: 1.2rem;
-        color: #666;
+    .app-subtitle {
         text-align: center;
+        color: #4a5568;
+        font-size: 1.1rem;
         margin-bottom: 2rem;
+        font-weight: 500;
     }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
-        color: white;
+    
+    /* Section headers */
+    .section-header {
+        color: #1a202c;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Input fields */
+    .stTextInput > label {
+        color: #2d3748 !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .stTextInput > div > div > input {
+        border: 2px solid #cbd5e0 !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        color: #1a202c !important;
+        background-color: white !important;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    }
+    
+    /* Primary button - blue with white text */
+    .stButton > button[kind="primary"] {
+        width: 100%;
+        background: #2563eb !important;
+        color: white !important;
+        border: none !important;
+        padding: 0.875rem 1.5rem !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+        margin-top: 0.5rem !important;
+        transition: all 0.2s !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
+        background: #1d4ed8 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3) !important;
+    }
+    
+    /* Footer */
+    .footer {
         text-align: center;
+        color: #4a5568;
+        font-size: 0.9rem;
+        margin-top: 3rem;
+        padding: 1rem;
     }
+    
+    .footer-school {
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    /* Demo credentials box */
+    .stExpander {
+        background: #edf2f7;
+        border: 1px solid #cbd5e0;
+        border-radius: 10px;
+        margin-top: 2rem;
+    }
+    
+    .stExpander summary {
+        color: #2d3748 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Alert messages */
     .stAlert {
         border-radius: 10px;
     }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# Header
-st.markdown('<p class="main-header">🎓 AI School Administration System</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Module 1: Early Warning System for Student Risk Detection</p>', unsafe_allow_html=True)
+# Check if already authenticated
+if SessionManager.is_authenticated():
+    st.switch_page("pages/1_📊_Dashboard.py")
 
-# Sidebar
-with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/000000/artificial-intelligence.png", width=80)
-    st.title("Navigation")
-    
-    page = st.radio(
-        "Select Module:",
-        ["🏠 Home", "🎯 Risk Detection", "📊 About Model"],
-        label_visibility="collapsed"
-    )
-    
-    st.divider()
-    
-    # API Status Check
-    from utils.api_client import api_client
-    
-    st.subheader("System Status")
-    
-    with st.spinner("Checking API..."):
-        is_healthy, response = api_client.health_check()
-    
-    if is_healthy:
-        st.success("✅ API Connected")
-        st.caption(f"Version: {response.get('version', 'Unknown')}")
+# Check API health
+with st.spinner("Checking system status..."):
+    health = APIClient.health_check()
+    if health.get('status') != 'healthy':
+        st.error("⚠️ **Cannot connect to backend server**")
+        st.info("Please ensure the Flask API is running:")
+        st.code("python backend/api.py", language="bash")
+        st.stop()
+
+# Login Page Header
+st.markdown('<div class="logo">🎓</div>', unsafe_allow_html=True)
+st.markdown('<h1 class="app-title">ScholarSense</h1>', unsafe_allow_html=True)
+st.markdown('<p class="app-subtitle">AI-Powered Academic Intelligence System</p>', unsafe_allow_html=True)
+
+# Login Form
+st.markdown('<div class="section-header">🔐 Login to Continue</div>', unsafe_allow_html=True)
+
+email = st.text_input(
+    "📧 Email Address",
+    placeholder="admin@scholarsense.com",
+    key="login_email"
+)
+
+password = st.text_input(
+    "🔒 Password",
+    type="password",
+    placeholder="Enter your password",
+    key="login_password"
+)
+
+# Login button
+col1, col2 = st.columns([3, 1])
+with col1:
+    login_button = st.button("LOGIN", type="primary", use_container_width=True)
+
+# Handle login
+if login_button:
+    if not email or not password:
+        st.error("❌ Please enter both email and password")
     else:
-        st.error("❌ API Offline")
-        st.caption("Start with: `python backend/api.py`")
-    
-    st.divider()
-    
-    st.caption("© 2025 AI School Admin System")
-    st.caption("Module 1 - Version 1.0.0")
-
-# Main content area
-if page == "🏠 Home":
-    # Home page content
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric(
-            label="Model Accuracy",
-            value="98.00%",
-            delta="Best Model"
-        )
-    
-    with col2:
-        st.metric(
-            label="Risk Levels",
-            value="4 Categories",
-            delta="Low to Critical"
-        )
-    
-    with col3:
-        st.metric(
-            label="Features",
-            value="17 Parameters",
-            delta="Comprehensive"
-        )
-    
-    st.divider()
-    
-    # Welcome section
-    st.header("Welcome to the Early Warning System")
-    
-    st.markdown("""
-    This AI-powered system helps identify students at risk of academic failure, dropout, 
-    or behavioral issues **before** problems escalate.
-    
-    ### 🎯 Key Features:
-    - **Real-time Risk Assessment**: Instant predictions with 98% accuracy
-    - **4 Risk Levels**: Low, Medium, High, and Critical classifications
-    - **Confidence Scores**: See how confident the model is in each prediction
-    - **Intervention Recommendations**: Get actionable suggestions for each student
-    - **Batch Processing**: Analyze multiple students simultaneously
-    
-    ### 📊 How It Works:
-    1. Input student demographic, academic, and behavioral data
-    2. Our ML model analyzes 17 key features
-    3. Get instant risk prediction with confidence scores
-    4. Review personalized intervention recommendations
-    
-    ### 🚀 Get Started:
-    Navigate to **🎯 Risk Detection** in the sidebar to begin making predictions.
-    """)
-    
-    # Feature overview
-    st.divider()
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📚 Data Categories")
-        st.markdown("""
-        - **Demographics**: Age, Gender, Grade, SES
-        - **Academic**: GPA, Failed Subjects, Assignments
-        - **Behavioral**: Incidents, Attendance, Counseling
-        - **Engagement**: Library, Extracurricular Activities
-        """)
-    
-    with col2:
-        st.subheader("🎓 Model Performance")
-        st.markdown("""
-        - **Algorithm**: Gradient Boosting Classifier
-        - **Accuracy**: 98.00%
-        - **Precision**: 98.03%
-        - **Recall**: 98.00%
-        - **F1-Score**: 98.00%
-        """)
-
-elif page == "🎯 Risk Detection":
-    # Risk detection page - will be in separate file
-    st.info("👉 Navigate to the Risk Detection page to make predictions")
-    st.markdown("The Risk Detection interface will be loaded next...")
-
-elif page == "📊 About Model":
-    st.header("📊 About the Model")
-    
-    # Get model info from API
-    model_info = api_client.get_model_info()
-    
-    if model_info:
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Model Type", model_info.get('model_name', 'Unknown'))
-        with col2:
-            st.metric("Accuracy", model_info.get('accuracy', 'N/A'))
-        with col3:
-            st.metric("Features", model_info.get('features_count', 'N/A'))
-        
-        st.divider()
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("Performance Metrics")
-            st.markdown(f"""
-            - **Precision**: {model_info.get('precision', 'N/A')}
-            - **Recall**: {model_info.get('recall', 'N/A')}
-            - **F1-Score**: {model_info.get('f1_score', 'N/A')}
-            - **Training Date**: {model_info.get('trained_date', 'Unknown')}
-            """)
-        
-        with col2:
-            st.subheader("Model Details")
-            st.markdown("""
-            **Algorithm**: Gradient Boosting Classifier
+        with st.spinner("Authenticating..."):
+            result = SessionManager.login(email, password)
             
-            **Training Data**: 1,000 synthetic student records
-            
-            **Class Balancing**: SMOTE (Synthetic Minority Over-sampling)
-            
-            **Feature Scaling**: StandardScaler normalization
-            """)
-        
-        st.divider()
-        
-        st.subheader("Risk Level Definitions")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.success("**Low Risk (0)**: Student performing well, no intervention needed")
-            st.info("**Medium Risk (1)**: Monitor progress, encourage study groups")
-        
-        with col2:
-            st.warning("**High Risk (2)**: Schedule meetings, assign tutors, weekly monitoring")
-            st.error("**Critical Risk (3)**: IMMEDIATE intervention, daily monitoring, intensive support")
-    
-    else:
-        st.warning("Unable to fetch model information. Make sure the API is running.")
+            if result == True:
+                st.success("✅ Login successful! Redirecting...")
+                st.rerun()
+            else:
+                st.error(f"❌ {result}")
 
 # Footer
-st.divider()
-st.caption("AI-Based Smart School Administration System | Module 1: Early Warning System | Version 1.0.0")
+st.markdown("---")
+st.markdown("""
+<div class="footer">
+    <p class="footer-school">🏫 Greenwood High School • Academic Year 2025-26</p>
+    <p style="margin-top: 0.5rem;">Powered by AI • Built for Excellence</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Demo credentials
+with st.expander("🔑 Demo Credentials"):
+    st.markdown("""
+    **Admin Account:**
+    - Email: `admin@scholarsense.com`
+    - Password: `admin123`
+    
+    **Teacher Account:**
+    - Email: `teacher@scholarsense.com`
+    - Password: `teacher123`
+    """)
