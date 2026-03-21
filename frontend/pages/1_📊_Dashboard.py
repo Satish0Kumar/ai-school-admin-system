@@ -16,6 +16,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
+# ── Imports (add at top with other imports) ────────────────
+from frontend.utils.page_header import render_page_header
+
 # Page config
 st.set_page_config(
     page_title="Dashboard - ScholarSense",
@@ -195,43 +198,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header
+# ── Header ─────────────────────────────────────────────────
 user = SessionManager.get_user()
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.title("📊 Dashboard")
-    st.markdown(f"Welcome back, **{user['full_name']}** • {user['role'].title()} 👋")
+render_page_header(
+    title    = "Dashboard",
+    subtitle = f"Welcome back, {user['full_name']} 👋 — School-wide overview",
+    icon     = "📊",
+    section  = "Overview"
+)
 
-# Sidebar
-with st.sidebar:
-    st.markdown("### 🎓 ScholarSense")
-    st.markdown("---")
-    
-    # User info card
-    st.markdown(f"""
-    <div style="background: #edf2f7; padding: 1rem; border-radius: 10px; border: 1px solid #cbd5e0;">
-        <p style="margin: 0; font-weight: 700; color: #1a202c; font-size: 1.05rem;">{user['full_name']}</p>
-        <p style="margin: 0.25rem 0 0 0; color: #4a5568; font-size: 0.9rem;">{user['role'].title()}</p>
-        <p style="margin: 0.25rem 0 0 0; color: #718096; font-size: 0.85rem;">📧 {user['email']}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Navigation
-    st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard", use_container_width=True, disabled=True):
-        pass
-    if st.button("👥 Students", use_container_width=True):
-        st.switch_page("pages/2_👥_Students.py")
-    if st.button("🎯 Predictions", use_container_width=True):
-        st.switch_page("pages/4_🎯_Predictions.py")
-    
-    st.markdown("---")
-    
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
-        SessionManager.logout()
-        st.switch_page("app.py")
 
 # Fetch data
 with st.spinner("Loading dashboard data..."):
