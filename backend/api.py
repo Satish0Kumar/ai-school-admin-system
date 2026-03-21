@@ -321,35 +321,6 @@ def resend_otp():
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@app.route('/api/auth/bypass-otp', methods=['POST'])
-def bypass_otp():
-    """
-    DEVELOPMENT ONLY - Login without OTP for testing
-    Remove this endpoint before production deployment!
-    Body: {"email": "admin@scholarsense.com", "password": "admin123"}
-    Returns: JWT token directly
-    """
-    try:
-        if os.getenv('FLASK_ENV') != 'development':
-            return jsonify({'error': 'Not available in production'}), 403
-
-        data     = request.get_json()
-        email    = data.get('email')
-        password = data.get('password')
-
-        result = AuthService.login(email, password)
-
-        if result:
-            print(f"⚠️  Bypass OTP login: {email}")
-            return jsonify(result), 200
-
-        return jsonify({'error': 'Invalid credentials'}), 401
-
-    except Exception as e:
-        return jsonify({'error': 'Internal server error'}), 500
-
-
-
 
 
 @app.route('/api/auth/verify', methods=['GET'])
