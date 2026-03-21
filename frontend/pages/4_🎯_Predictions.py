@@ -20,6 +20,11 @@ st.set_page_config(
     layout="wide"
 )
 
+from frontend.utils.sidebar import render_sidebar
+render_sidebar()
+
+
+
 # Require authentication
 SessionManager.require_auth()
 

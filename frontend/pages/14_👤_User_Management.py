@@ -9,6 +9,11 @@ st.set_page_config(
     layout="wide"
 )
 
+
+from frontend.utils.sidebar import render_sidebar
+render_sidebar()
+
+
 API_BASE = "http://localhost:5000"
 
 # ─────────────────────────────────────────────

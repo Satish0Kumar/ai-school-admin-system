@@ -96,6 +96,10 @@ def color_severity_row(severity):
 # ============================================
 st.set_page_config(page_title="Incident Logging", page_icon="📝", layout="wide")
 
+from frontend.utils.sidebar import render_sidebar
+render_sidebar()
+
+
 st.markdown("""
     <h1 style='color:#1f77b4;'>📝 Behavioral Incident Logging</h1>
     <p style='color:gray;'>Log, track and manage student behavioral incidents</p>
