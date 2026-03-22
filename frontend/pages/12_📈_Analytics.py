@@ -18,6 +18,8 @@ import plotly.express as px
 from datetime import datetime
 from frontend.utils.session_manager import SessionManager
 
+
+
 # ============================================
 # PAGE CONFIG
 # ============================================
@@ -30,6 +32,9 @@ st.set_page_config(
 
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
+
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
 
 
 # ============================================
@@ -139,6 +144,21 @@ def api_get(endpoint, params=None):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+
+@st.cache_data(ttl=600)
+def cached_overview(_token):
+    return api_get("/analytics/school-overview")
+
+@st.cache_data(ttl=600)
+def cached_trends(_token, months=6):
+    return api_get("/analytics/trends", params={"months": months})
+
+@st.cache_data(ttl=300)
+def cached_comm_stats(_token):
+    return api_get("/communications/stats")
+
+
+
 # ============================================
 # SIDEBAR
 # ============================================
@@ -203,14 +223,14 @@ st.markdown(f"""
 # ============================================
 # FETCH ALL DATA UPFRONT
 # ============================================
+_token = st.session_state.get('token', '')
+
 with st.spinner("📊 Loading school analytics..."):
-    overview_res = api_get("/analytics/school-overview")
-    trends_res   = api_get(
-        "/analytics/trends",
-        params={"months": trend_months}
-    )
-    comm_stats   = api_get("/communications/stats")
-    batch_sum    = api_get("/batch/summary")
+    overview_res = cached_overview(_token)
+    trends_res   = cached_trends(_token, trend_months)
+    comm_stats   = cached_comm_stats(_token)
+    batch_sum    = api_get("/batch/summary")   # small call, no cache needed
+
 
 # Check data loaded
 if overview_res.get('status') != 'success':

@@ -10,8 +10,15 @@ def render_sidebar():
 
     with st.sidebar:
 
-        # ── Brand Header ──────────────────────────────────────
         st.markdown("""
+        <style>
+            @media (max-width: 768px) {
+                [data-testid="stSidebar"] > div:first-child {
+                    padding-top: 1rem !important;
+                }
+                [data-testid="stSidebarNav"] { display: none !important; }
+            }
+        </style>
         <div style='text-align:center; padding: 10px 0 5px 0;'>
             <span style='font-size:2rem;'>🎓</span><br>
             <span style='font-weight:800; font-size:1.2rem; color:#1a202c;'>ScholarSense</span><br>
@@ -19,7 +26,17 @@ def render_sidebar():
         </div>
         """, unsafe_allow_html=True)
 
+
+        # ── Dark Mode Toggle ───────────────────────────────
+        dark_mode = st.toggle(
+            "🌙 Dark Mode",
+            value=st.session_state.get('dark_mode', False),
+            key="dark_mode_toggle"
+        )
+        st.session_state['dark_mode'] = dark_mode
+
         st.divider()
+
 
         # ── Get user role ──────────────────────────────────────
         user = st.session_state.get("user", {})
@@ -101,3 +118,12 @@ def render_sidebar():
         if st.button("🚪 Logout", use_container_width=True, type="secondary"):
             SessionManager.logout()
             st.switch_page("app.py")
+
+        # ── Preferences Panel ──────────────────────────────────
+        from frontend.utils.preferences import render_preferences_panel
+        render_preferences_panel()
+
+        # ── Keyboard shortcut hints ────────────────────────────
+        from frontend.utils.ui_helpers import show_shortcut_hints, inject_keyboard_shortcuts
+        show_shortcut_hints()
+        inject_keyboard_shortcuts()

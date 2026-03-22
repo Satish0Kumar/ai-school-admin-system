@@ -13,11 +13,13 @@ import streamlit as st
 from frontend.utils.session_manager import SessionManager
 from frontend.utils.api_client import APIClient
 import pandas as pd
-from frontend.utils.ui_helpers import show_empty_state, safe_api_call
+from frontend.utils.ui_helpers import show_empty_state, safe_api_call, show_toast, bulk_action_bar
 
+from frontend.utils.activity_log import log_activity
 
 # Pagination
-PAGE_SIZE = 10
+# PAGE_SIZE is resolved at runtime inside the page, not module level
+PAGE_SIZE = 10  # fallback default
 
 
 @st.cache_data(ttl=300)
@@ -40,9 +42,35 @@ st.set_page_config(
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
+
 
 # Require authentication
 SessionManager.require_auth()
+
+# R key → refresh students list
+st.markdown("""
+<script>
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'r' && document.activeElement.tagName !== 'INPUT'
+                      && document.activeElement.tagName !== 'TEXTAREA') {
+        // Click the Streamlit rerun button equivalent
+        window.location.reload();
+    }
+});
+</script>
+""", unsafe_allow_html=True)
+
+
+
+# ── Show pending toast if any ──────────────────────────────
+if st.session_state.get('toast_msg'):
+    show_toast(
+        st.session_state.pop('toast_msg'),
+        type=st.session_state.pop('toast_type', 'success')
+    )
+
 
 # Apply same CSS as dashboard
 st.markdown("""
@@ -66,28 +94,6 @@ user = SessionManager.get_user()
 st.title("👥 Students Management")
 st.markdown(f"Manage all students • {user['role'].title()}")
 
-# Sidebar
-with st.sidebar:
-    st.markdown("### 🎓 ScholarSense")
-    st.markdown("---")
-    st.markdown(f"""
-    <div style="background: #edf2f7; padding: 1rem; border-radius: 10px; border: 1px solid #cbd5e0;">
-        <p style="margin: 0; font-weight: 700; color: #1a202c;">{user['full_name']}</p>
-        <p style="margin: 0.25rem 0 0 0; color: #4a5568; font-size: 0.9rem;">{user['role'].title()}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("---")
-    st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard", use_container_width=True):
-        st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students", use_container_width=True, disabled=True):
-        pass
-    if st.button("🎯 Predictions", use_container_width=True):
-        st.switch_page("pages/4_🎯_Predictions.py")
-    st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
-        SessionManager.logout()
-        st.switch_page("app.py")
 
 # Filters
 st.markdown('<p class="section-header">🔍 Filter Students</p>', unsafe_allow_html=True)
@@ -133,7 +139,7 @@ with st.spinner("Loading students..."):
 
 
 # Stats
-col1, col2 = st.columns([3, 1])
+col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
     st.markdown(f'<p class="section-header">📋 Students List ({len(students)} found)</p>', unsafe_allow_html=True)
 with col2:
@@ -141,6 +147,12 @@ with col2:
         if st.button("➕ Add New Student", type="primary", use_container_width=True):
             st.session_state['show_add_form'] = True
             st.rerun()
+with col3:
+    bulk_mode = st.toggle("☑️ Bulk Select", key="bulk_mode")
+
+# Init selected set
+if 'selected_students' not in st.session_state:
+    st.session_state['selected_students'] = set()
 
 # Add student form
 if st.session_state.get('show_add_form', False):
@@ -189,9 +201,17 @@ if st.session_state.get('show_add_form', False):
                     
                     result = APIClient.create_student(data)
                     if 'error' not in result:
-                        st.success(f"✅ Student created: {result['student_id']}")
+                        from frontend.utils.activity_log import log_activity
+                        log_activity(
+                            action="Student Created",
+                            entity=f"{first_name} {last_name} ({student_id})",
+                            icon="👤",
+                            level="success"
+                        )
                         st.session_state['show_add_form'] = False
-                        st.cache_data.clear()  # ← Force fresh data
+                        st.session_state['toast_msg']  = f"Student {result['student_id']} created successfully!"
+                        st.session_state['toast_type'] = 'success'
+                        st.cache_data.clear()
                         st.rerun()
                     else:
                         st.error(f"❌ {result['error']}")
@@ -199,8 +219,11 @@ if st.session_state.get('show_add_form', False):
 # Students list with pagination
 if students:
     # ── Pagination calculations ──────────────────────────
+    from frontend.utils.preferences import get_pref
+    PAGE_SIZE      = get_pref("items_per_page")
     total_students = len(students)
-    total_pages    = max(1, -(-total_students // PAGE_SIZE))  # ceiling division
+    total_pages    = max(1, -(-total_students // PAGE_SIZE))
+
     page_num       = st.session_state.get('page_num', 1)
     page_num       = max(1, min(page_num, total_pages))       # clamp within range
 
@@ -208,9 +231,62 @@ if students:
     end_idx   = start_idx + PAGE_SIZE
     page_students = students[start_idx:end_idx]
 
-    # ── Render current page students ─────────────────────
+    # ── Bulk action bar ──────────────────────────────────
+    if st.session_state.get('bulk_mode'):
+        action = bulk_action_bar(
+            selected_ids=st.session_state['selected_students'],
+            actions=[
+                {"label": "🗑️ Delete Selected",  "key": "bulk_delete",  "type": "primary"},
+                {"label": "🎯 Predict All",        "key": "bulk_predict", "type": "secondary"},
+                {"label": "📥 Export Selected",    "key": "bulk_export",  "type": "secondary"},
+            ]
+        )
+        if action == "bulk_delete" and st.session_state['selected_students']:
+            deleted, failed = 0, 0
+            for sid in list(st.session_state['selected_students']):
+                r = APIClient.delete_student(sid)
+                if 'error' not in r:
+                    deleted += 1
+                else:
+                    failed += 1
+            st.session_state['selected_students'] = set()
+            st.session_state['toast_msg']  = f"Deleted {deleted} student(s)." + (f" {failed} failed." if failed else "")
+            st.session_state['toast_type'] = 'warning'
+            st.cache_data.clear()
+            st.rerun()
+
+        elif action == "bulk_predict" and st.session_state['selected_students']:
+            done = 0
+            for sid in st.session_state['selected_students']:
+                APIClient.make_prediction(sid)
+                done += 1
+            show_toast(f"Predictions run for {done} student(s)!", type='success')
+
+        elif action == "bulk_export" and st.session_state['selected_students']:
+            import pandas as pd
+            selected_data = [s for s in students if s['id'] in st.session_state['selected_students']]
+            df = pd.DataFrame(selected_data)
+            csv = df.to_csv(index=False)
+            st.download_button("📥 Download CSV", csv, "selected_students.csv", "text/csv")
+
+        elif action == "clear":
+            st.session_state['selected_students'] = set()
+            st.rerun()
+
     for student in page_students:
-        col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 1])
+        if st.session_state.get('bulk_mode'):
+            col0, col1, col2, col3, col4, col5 = st.columns([0.5, 3, 2, 2, 2, 1])
+            with col0:
+                checked = st.checkbox(
+                    "", key=f"chk_{student['id']}",
+                    value=student['id'] in st.session_state['selected_students']
+                )
+                if checked:
+                    st.session_state['selected_students'].add(student['id'])
+                else:
+                    st.session_state['selected_students'].discard(student['id'])
+        else:
+            col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 1])
 
         with col1:
             st.markdown(f'<p class="student-name">{student["first_name"]} {student["last_name"]}</p>', unsafe_allow_html=True)

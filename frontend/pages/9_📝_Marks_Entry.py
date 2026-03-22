@@ -31,6 +31,9 @@ st.set_page_config(
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
+
 
 # ============================================
 # SESSION CHECK

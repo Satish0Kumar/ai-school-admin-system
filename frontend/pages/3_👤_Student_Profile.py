@@ -29,6 +29,9 @@ st.set_page_config(
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
+
 
 # Require authentication
 SessionManager.require_auth()
@@ -165,7 +168,7 @@ if 'error' in details:
 # ============================================
 # PAGE HEADER
 # ============================================
-col1, col2 = st.columns([3, 1])
+col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
     st.title(f"👤 {details['first_name']} {details['last_name']}")
     st.markdown(
@@ -175,6 +178,18 @@ with col1:
 with col2:
     if st.button("← Back to Students", use_container_width=True):
         st.switch_page("pages/2_👥_Students.py")
+with col3:
+    from frontend.utils.report_generator import generate_student_report
+    from frontend.utils.activity_log import log_activity
+    report_html = generate_student_report(details)
+    st.download_button(
+        label="📄 Export Report",
+        data=report_html,
+        file_name=f"report_{details['student_id']}.html",
+        mime="text/html",
+        use_container_width=True
+    )
+    # log only when button clicked — Streamlit handles this automatically
 
 # ============================================
 # TABS  ← Enhancement 4 adds "📝 Incidents"
@@ -262,6 +277,13 @@ with tab1:
             with st.spinner("Making prediction..."):
                 result = APIClient.make_prediction(student_id)
                 if 'error' not in result:
+                    from frontend.utils.activity_log import log_activity
+                    log_activity(
+                        action="Prediction Run",
+                        entity=f"{details['first_name']} {details['last_name']} → {result['risk_label']}",
+                        icon="🎯",
+                        level="info"
+                    )
                     st.success(f"✅ Prediction updated: {result['risk_label']}")
                     st.rerun()
                 else:
@@ -274,6 +296,25 @@ with tab1:
     with col3:
         if st.button("🚨 Log Incident", use_container_width=True):
             st.switch_page("pages/6_📝_Incident_Logging.py")
+
+    # ── Danger Zone ───────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("**🚨 Danger Zone**")
+    from frontend.utils.ui_helpers import confirm_dialog, show_toast
+
+    student_name = f"{details['first_name']} {details['last_name']}"
+    if confirm_dialog(
+        "Delete Student",
+        key=f"del_{student_id}",
+        warning_msg=f"This will permanently delete {student_name} and ALL their records (grades, incidents, predictions)."
+    ):
+        result = APIClient.delete_student(student_id)
+        if 'error' not in result:
+            st.session_state['toast_msg']  = f"{student_name} deleted successfully."
+            st.session_state['toast_type'] = 'warning'
+            st.switch_page("pages/2_👥_Students.py")
+        else:
+            show_toast(result['error'], type='error')
 
 
 # ============================================================
@@ -405,10 +446,18 @@ with tab3:
             with st.spinner("Running prediction..."):
                 result = APIClient.make_prediction(student_id)
                 if 'error' not in result:
+                    from frontend.utils.activity_log import log_activity
+                    log_activity(
+                        action="Prediction Run",
+                        entity=f"{details['first_name']} {details['last_name']} → {result['risk_label']}",
+                        icon="🎯",
+                        level="info"
+                    )
                     st.success(f"✅ Updated: {result['risk_label']} ({result['confidence_score']:.1f}%)")
                     st.rerun()
                 else:
                     st.error(f"❌ {result['error']}")
+
     else:
         st.info("📭 No risk prediction available")
         if st.button("🎯 Run First Prediction", type="primary"):

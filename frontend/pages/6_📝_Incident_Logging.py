@@ -99,6 +99,9 @@ st.set_page_config(page_title="Incident Logging", page_icon="📝", layout="wide
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
+
 
 st.markdown("""
     <h1 style='color:#1f77b4;'>📝 Behavioral Incident Logging</h1>
@@ -251,10 +254,18 @@ with tab1:
                 result = api_post("/incidents/log", payload)
 
             if result.get('status') == 'success':
+                from frontend.utils.activity_log import log_activity
+                log_activity(
+                    action="Incident Logged",
+                    entity=f"{student_label.split('—')[1].strip()} — {severity}",
+                    icon="🚨",
+                    level="warning"
+                )
                 st.success("✅ Incident logged successfully!")
 
                 # Show summary card
                 inc = result['data']
+
                 st.markdown(f"""
                 <div style='background:#f0f2f6; padding:15px; border-radius:10px;
                             border-left: 5px solid {SEVERITY_COLORS.get(severity,"#ccc")};'>

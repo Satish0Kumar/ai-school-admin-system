@@ -33,10 +33,22 @@ st.set_page_config(
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
+
 
 
 # Require authentication
 SessionManager.require_auth()
+
+# ── Show pending toast if any ──────────────────────────────
+from frontend.utils.ui_helpers import show_toast
+if st.session_state.get('toast_msg'):
+    show_toast(
+        st.session_state.pop('toast_msg'),
+        type=st.session_state.pop('toast_type', 'success')
+    )
+
 
 # Professional CSS with HIGH CONTRAST
 st.markdown("""
@@ -210,6 +222,37 @@ render_page_header(
     section  = "Overview"
 )
 
+# ── Phase 5 completion notice (remove after review) ───────
+if st.session_state.get('show_phase5_banner', True):
+    col_b, col_x = st.columns([10, 1])
+    with col_b:
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,#f0fff4,#c6f6d5);
+                    border:1px solid #9ae6b4; border-radius:10px;
+                    padding:0.65rem 1.25rem; margin-bottom:0.75rem;
+                    display:flex; align-items:center; gap:0.75rem;">
+            <span style="font-size:1.3rem;">🎉</span>
+            <span style="color:#22543d; font-weight:700; font-size:0.9rem;">
+                Phase 5 Complete! Toast notifications, dark mode,
+                bulk actions, global search, export reports & more — all live.
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_x:
+        if st.button("✕", key="dismiss_banner"):
+            st.session_state['show_phase5_banner'] = False
+            st.rerun()
+
+
+# ── Global Search ──────────────────────────────────────────
+from frontend.utils.global_search import render_global_search
+
+st.markdown('<p class="section-header">🔍 Global Search</p>',
+            unsafe_allow_html=True)
+render_global_search()
+st.markdown("---")
+
+
 
 # Show skeleton while loading
 skeleton_placeholder = st.empty()
@@ -238,7 +281,21 @@ skeleton_placeholder.empty()
 
 # Metrics Row
 st.markdown("### 📈 Key Metrics")
-col1, col2, col3, col4 = st.columns(4)
+
+st.markdown("""
+<style>
+    /* Stack metric cards on mobile */
+    @media (max-width: 640px) {
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            min-width: 48% !important;
+            flex: 0 0 48% !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+
 
 with col1:
     st.markdown(f"""
@@ -398,20 +455,35 @@ with col2:
     else:
         st.success("✅ No high-risk students! Excellent work! 🎉")
 
-# Quick Actions
+# ── Activity Feed + Quick Actions ─────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown('<p class="section-header">⚡ Quick Actions</p>', unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
+feed_col, actions_col = st.columns([2, 1])
 
-with col1:
+with feed_col:
+    from frontend.utils.activity_log import render_activity_feed
+    st.markdown('<p class="section-header">🕐 Recent Activity</p>', unsafe_allow_html=True)
+    render_activity_feed(limit=8)
+
+with actions_col:
+    st.markdown('<p class="section-header">⚡ Quick Actions</p>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
     if st.button("➕ Add New Student", use_container_width=True, type="primary"):
         st.switch_page("pages/2_👥_Students.py")
 
-with col2:
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("📋 View All Students", use_container_width=True):
         st.switch_page("pages/2_👥_Students.py")
 
-with col3:
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🎯 Make Prediction", use_container_width=True):
         st.switch_page("pages/4_🎯_Predictions.py")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("📝 Log Incident", use_container_width=True):
+        st.switch_page("pages/6_📝_Incident_Logging.py")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔁 Batch Analysis", use_container_width=True):
+        st.switch_page("pages/10_🔁_Batch_Analysis.py")

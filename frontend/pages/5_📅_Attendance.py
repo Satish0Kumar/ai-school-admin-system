@@ -24,10 +24,11 @@ st.set_page_config(
 
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
-
-
 # Require authentication
 SessionManager.require_auth()
+from frontend.utils.ui_helpers import inject_theme_css
+inject_theme_css()
+
 
 # Apply CSS
 st.markdown("""
@@ -50,30 +51,6 @@ user = SessionManager.get_user()
 st.title("📅 Attendance Management")
 st.markdown("Track and manage student attendance")
 
-# Sidebar
-with st.sidebar:
-    st.markdown("### 🎓 ScholarSense")
-    st.markdown("---")
-    st.markdown(f"""
-    <div style="background: #edf2f7; padding: 1rem; border-radius: 10px; border: 1px solid #cbd5e0;">
-        <p style="margin: 0; font-weight: 700; color: #1a202c;">{user['full_name']}</p>
-        <p style="margin: 0.25rem 0 0 0; color: #4a5568; font-size: 0.9rem;">{user['role'].title()}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("---")
-    st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard", use_container_width=True):
-        st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students", use_container_width=True):
-        st.switch_page("pages/2_👥_Students.py")
-    if st.button("🎯 Predictions", use_container_width=True):
-        st.switch_page("pages/4_🎯_Predictions.py")
-    if st.button("📅 Attendance", use_container_width=True, disabled=True):
-        pass
-    st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
-        SessionManager.logout()
-        st.switch_page("app.py")
 
 # Tab navigation
 tab1, tab2, tab3 = st.tabs(["📝 Mark Attendance", "📊 Attendance Reports", "⚠️ Low Attendance"])
