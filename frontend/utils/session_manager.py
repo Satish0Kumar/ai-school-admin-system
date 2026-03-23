@@ -1,96 +1,103 @@
 """
 Session Management for Streamlit - ScholarSense
-Uses streamlit-local-storage for reliable session persistence
+Uses a local JSON file for reliable session persistence across page refreshes.
+Works perfectly for local/development Streamlit apps.
 """
 import streamlit as st
 import json
+import os
 from datetime import datetime, timedelta
+from pathlib import Path
 from frontend.utils.api_client import APIClient
 
+# Session file stored in project root (gitignored)
+SESSION_FILE = Path(__file__).parent.parent.parent / ".streamlit_session.json"
 
-def get_local_storage():
-    """Get LocalStorage instance (cached in session)"""
-    if '_ls' not in st.session_state:
-        from streamlit_local_storage import LocalStorage
-        st.session_state._ls = LocalStorage()
-    return st.session_state._ls
+
+def _read_session_file() -> dict:
+    """Read session data from file"""
+    try:
+        if SESSION_FILE.exists():
+            with open(SESSION_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+
+def _write_session_file(data: dict):
+    """Write session data to file"""
+    try:
+        with open(SESSION_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+
+def _delete_session_file():
+    """Delete session file on logout"""
+    try:
+        if SESSION_FILE.exists():
+            SESSION_FILE.unlink()
+    except Exception:
+        pass
 
 
 class SessionManager:
 
     @staticmethod
     def initialize_session():
-        """Set defaults + restore from localStorage if not already in session"""
+        """Set defaults + restore from file if not already in session"""
+        # Set defaults only if not present
         for key, val in [
             ('authenticated', False),
             ('user',          None),
             ('token',         None),
             ('token_expiry',  None),
-            ('_session_restored', False)
         ]:
             if key not in st.session_state:
                 st.session_state[key] = val
 
-        # Already authenticated this run — skip restore
+        # Already authenticated this run — nothing to do
         if st.session_state.get('authenticated'):
             return
 
-        # Already tried restore this run — skip to avoid loops
-        if st.session_state.get('_session_restored'):
-            return
+        # ── Restore from session file ──────────────────────────
+        data = _read_session_file()
+        token  = data.get('token')
+        expiry = data.get('expiry')
+        user   = data.get('user')
 
-        st.session_state['_session_restored'] = True
-
-        # ── Try restoring from localStorage ───────────────────
-        try:
-            ls    = get_local_storage()
-            token  = ls.getItem("ss_token")
-            expiry = ls.getItem("ss_expiry")
-            user   = ls.getItem("ss_user")
-
-            if token and expiry:
+        if token and expiry:
+            try:
                 expiry_dt = datetime.fromisoformat(expiry)
                 if datetime.now() < expiry_dt:
+                    # ✅ Valid session — restore it
                     st.session_state.authenticated = True
                     st.session_state.token         = token
                     st.session_state.token_expiry  = expiry_dt
-                    st.session_state.user          = (
-                        json.loads(user) if user else {}
-                    )
-        except Exception:
-            pass
-
-    @staticmethod
-    def _save(token: str, user: dict, expiry_dt: datetime):
-        """Persist to localStorage"""
-        try:
-            ls = get_local_storage()
-            ls.setItem("ss_token",  token)
-            ls.setItem("ss_expiry", expiry_dt.isoformat())
-            ls.setItem("ss_user",   json.dumps(user))
-        except Exception:
-            pass
-
-    @staticmethod
-    def _clear():
-        """Clear localStorage"""
-        try:
-            ls = get_local_storage()
-            ls.deleteItem("ss_token")
-            ls.deleteItem("ss_expiry")
-            ls.deleteItem("ss_user")
-        except Exception:
-            pass
+                    st.session_state.user          = user or {}
+                else:
+                    # Expired — clean up
+                    _delete_session_file()
+            except Exception:
+                _delete_session_file()
 
     @staticmethod
     def set_session(token: str, user: dict):
-        """Called after OTP verify — save to session + localStorage"""
+        """Called after OTP verify — save to session + file"""
         expiry_dt = datetime.now() + timedelta(hours=8)
+
         st.session_state.authenticated = True
         st.session_state.token         = token
         st.session_state.user          = user
         st.session_state.token_expiry  = expiry_dt
-        SessionManager._save(token, user, expiry_dt)
+
+        _write_session_file({
+            'token':  token,
+            'expiry': expiry_dt.isoformat(),
+            'user':   user
+        })
 
     @staticmethod
     def login(email: str, password: str):
@@ -103,13 +110,12 @@ class SessionManager:
 
     @staticmethod
     def logout():
-        """Clear session + localStorage"""
-        st.session_state.authenticated    = False
-        st.session_state.user             = None
-        st.session_state.token            = None
-        st.session_state.token_expiry     = None
-        st.session_state._session_restored = False
-        SessionManager._clear()
+        """Clear session + delete file"""
+        st.session_state.authenticated = False
+        st.session_state.user          = None
+        st.session_state.token         = None
+        st.session_state.token_expiry  = None
+        _delete_session_file()
 
     @staticmethod
     def is_authenticated() -> bool:
@@ -123,7 +129,7 @@ class SessionManager:
 
     @staticmethod
     def require_auth():
-        """Call at top of every page — restores session or redirects"""
+        """Call at top of every page — restores session or redirects to login"""
         SessionManager.initialize_session()
         if not SessionManager.is_authenticated():
             st.warning("⚠️ Please login to access this page")

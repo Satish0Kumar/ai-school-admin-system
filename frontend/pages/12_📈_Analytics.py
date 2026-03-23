@@ -34,6 +34,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 
@@ -467,18 +468,10 @@ with tab1:
                 )
             )])
             fig_risk.update_layout(
-                title="🎯 Risk Distribution",
-                height=300,
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c', size=11),
+                **get_plotly_layout("🎯 Risk Distribution", height=300),
                 margin=dict(t=45, b=10, l=10, r=10),
                 showlegend=True,
-                legend=dict(
-                    orientation='h',
-                    x=0.1, y=-0.15,
-                    font=dict(size=10)
-                )
+                legend=dict(orientation='h', x=0.1, y=-0.15, font=dict(size=10))
             )
             st.plotly_chart(fig_risk, use_container_width=True)
         else:
@@ -499,17 +492,9 @@ with tab1:
                 width=0.5
             )])
             fig_grade_count.update_layout(
-                title="👥 Students per Grade",
-                height=300,
+                **get_plotly_layout("👥 Students per Grade", height=300),
                 xaxis=dict(showgrid=False),
-                yaxis=dict(
-                    showgrid=True,
-                    gridcolor='#f0f0f0',
-                    rangemode='tozero'
-                ),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c', size=11),
+                yaxis=dict(showgrid=True, rangemode='tozero'),
                 margin=dict(t=45, b=40, l=40, r=20),
                 showlegend=False
             )
@@ -542,18 +527,10 @@ with tab1:
             )
         )])
         fig_act.update_layout(
-            title="🔢 Module Activity",
-            height=300,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(color='#1a202c', size=11),
+            **get_plotly_layout("🔢 Module Activity", height=300),
             margin=dict(t=45, b=10, l=10, r=10),
             showlegend=True,
-            legend=dict(
-                orientation='h',
-                x=0.0, y=-0.15,
-                font=dict(size=10)
-            )
+            legend=dict(orientation='h', x=0.0, y=-0.15, font=dict(size=10))
         )
         st.plotly_chart(fig_act, use_container_width=True)
 
@@ -618,18 +595,9 @@ with tab2:
                 annotation_position="top right"
             )
             fig_gpa.update_layout(
-                title="📊 Grade-wise Average GPA",
-                height=360,
+                **get_plotly_layout("📊 Grade-wise Average GPA", height=360),
                 xaxis=dict(showgrid=False),
-                yaxis=dict(
-                    title='Average GPA (%)',
-                    range=[0, 110],
-                    showgrid=True,
-                    gridcolor='#f0f0f0'
-                ),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c'),
+                yaxis=dict(title='Average GPA (%)', range=[0, 110], showgrid=True),
                 margin=dict(t=50, b=40, l=50, r=20)
             )
             st.plotly_chart(fig_gpa, use_container_width=True)
@@ -673,21 +641,10 @@ with tab2:
                 ))
 
                 fig_range.update_layout(
-                    title="📉 GPA Range (Min / Avg / Max)",
-                    height=360,
+                    **get_plotly_layout("📉 GPA Range (Min / Avg / Max)", height=360),
                     xaxis=dict(title='Grade', showgrid=False),
-                    yaxis=dict(
-                        title='GPA (%)',
-                        range=[0, 105],
-                        showgrid=True,
-                        gridcolor='#f0f0f0'
-                    ),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(color='#1a202c'),
-                    legend=dict(
-                        orientation='h', x=0, y=-0.2
-                    ),
+                    yaxis=dict(title='GPA (%)', range=[0, 105], showgrid=True),
+                    legend=dict(orientation='h', x=0, y=-0.2),
                     margin=dict(t=50, b=50, l=50, r=20)
                 )
                 st.plotly_chart(fig_range, use_container_width=True)
@@ -771,12 +728,8 @@ with tab2:
                     zmax=100
                 ))
                 fig_heatmap.update_layout(
-                    title="🔥 GPA Heatmap (Grade × Section)",
-                    height=350,
+                    **get_plotly_layout("🔥 GPA Heatmap (Grade × Section)", height=350),
                     xaxis=dict(side='bottom'),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(color='#1a202c'),
                     margin=dict(t=50, b=40, l=70, r=20)
                 )
                 st.plotly_chart(fig_heatmap, use_container_width=True)
@@ -946,11 +899,7 @@ with tab3:
                 )
             ))
             fig_funnel.update_layout(
-                title="📉 Dropout Risk Funnel",
-                height=380,
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c', size=12),
+                **get_plotly_layout("📉 Dropout Risk Funnel", height=380),
                 margin=dict(t=50, b=20, l=120, r=40)
             )
             st.plotly_chart(fig_funnel, use_container_width=True)
@@ -980,21 +929,9 @@ with tab3:
                 )
             )])
             fig_conf.update_layout(
-                title="🎯 ML Confidence Distribution",
-                height=380,
-                xaxis=dict(
-                    title='Confidence Band',
-                    showgrid=False
-                ),
-                yaxis=dict(
-                    title='Number of Students',
-                    showgrid=True,
-                    gridcolor='#f0f0f0',
-                    rangemode='tozero'
-                ),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c'),
+                **get_plotly_layout("🎯 ML Confidence Distribution", height=380),
+                xaxis=dict(title='Confidence Band', showgrid=False),
+                yaxis=dict(title='Number of Students', showgrid=True, rangemode='tozero'),
                 margin=dict(t=50, b=50, l=50, r=20)
             )
             st.plotly_chart(fig_conf, use_container_width=True)
@@ -1073,22 +1010,11 @@ with tab3:
                 ))
 
             fig_stacked.update_layout(
+                **get_plotly_layout("📊 Risk Breakdown by Grade", height=360),
                 barmode='stack',
-                title="📊 Risk Breakdown by Grade",
-                height=360,
                 xaxis=dict(showgrid=False),
-                yaxis=dict(
-                    title='Students',
-                    showgrid=True,
-                    gridcolor='#f0f0f0'
-                ),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c'),
-                legend=dict(
-                    orientation='h',
-                    x=0, y=-0.25
-                ),
+                yaxis=dict(title='Students', showgrid=True),
+                legend=dict(orientation='h', x=0, y=-0.25),
                 margin=dict(t=50, b=60, l=50, r=20)
             )
             st.plotly_chart(fig_stacked, use_container_width=True)
@@ -1170,20 +1096,9 @@ with tab4:
                 )
             ))
             fig_inc.update_layout(
-                title="🧠 Behavioral Incidents per Month",
-                height=320,
-                xaxis=dict(
-                    title='Month', showgrid=False
-                ),
-                yaxis=dict(
-                    title='Incident Count',
-                    showgrid=True,
-                    gridcolor='#f0f0f0',
-                    rangemode='tozero'
-                ),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c'),
+                **get_plotly_layout("🧠 Behavioral Incidents per Month", height=320),
+                xaxis=dict(title='Month', showgrid=False),
+                yaxis=dict(title='Incident Count', showgrid=True, rangemode='tozero'),
                 margin=dict(t=50, b=50, l=50, r=20),
                 showlegend=False
             )
@@ -1219,20 +1134,9 @@ with tab4:
                 )
             ))
             fig_comm.update_layout(
-                title="📧 Parent Emails Sent per Month",
-                height=320,
-                xaxis=dict(
-                    title='Month', showgrid=False
-                ),
-                yaxis=dict(
-                    title='Emails Sent',
-                    showgrid=True,
-                    gridcolor='#f0f0f0',
-                    rangemode='tozero'
-                ),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c'),
+                **get_plotly_layout("📧 Parent Emails Sent per Month", height=320),
+                xaxis=dict(title='Month', showgrid=False),
+                yaxis=dict(title='Emails Sent', showgrid=True, rangemode='tozero'),
                 margin=dict(t=50, b=50, l=50, r=20),
                 showlegend=False
             )
@@ -1314,17 +1218,9 @@ with tab4:
                     )
                 )])
                 fig_ctype.update_layout(
-                    height=300,
-                    xaxis=dict(
-                        title='Emails Sent',
-                        showgrid=True,
-                        gridcolor='#f0f0f0',
-                        rangemode='tozero'
-                    ),
+                    **get_plotly_layout(height=300),
+                    xaxis=dict(title='Emails Sent', showgrid=True, rangemode='tozero'),
                     yaxis=dict(showgrid=False),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(color='#1a202c', size=11),
                     margin=dict(t=10, b=40, l=140, r=40)
                 )
                 st.plotly_chart(fig_ctype, use_container_width=True)

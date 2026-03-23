@@ -35,7 +35,7 @@ def render_sidebar():
         # ── Dark Mode Toggle ───────────────────────────────
         dark_mode = st.toggle(
             "🌙 Dark Mode",
-            value=st.session_state.get('dark_mode', False),
+            value=st.session_state.get('dark_mode', True),   # ← True = dark by default
             key="dark_mode_toggle"
         )
         st.session_state['dark_mode'] = dark_mode

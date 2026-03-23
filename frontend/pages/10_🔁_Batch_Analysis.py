@@ -31,6 +31,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 
@@ -375,11 +376,7 @@ with tab1:
                         )
                     )])
                     fig_run.update_layout(
-                        title="Risk Distribution — This Run",
-                        height=300,
-                        plot_bgcolor='white',
-                        paper_bgcolor='white',
-                        font=dict(color='#1a202c'),
+                        **get_plotly_layout("Risk Distribution — This Run", height=300),
                         margin=dict(t=40, b=10, l=10, r=10),
                         showlegend=False
                     )
@@ -729,11 +726,7 @@ with tab3:
                     )
                 )])
                 fig_donut.update_layout(
-                    title="🎯 School-wide Risk Distribution",
-                    height=350,
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(color='#1a202c'),
+                    **get_plotly_layout("🎯 School-wide Risk Distribution", height=350),
                     margin=dict(t=50, b=20, l=10, r=10),
                     showlegend=True,
                     legend=dict(orientation='v', x=1.02, y=0.5)
@@ -759,7 +752,7 @@ with tab3:
                     textposition='outside',
                     hovertemplate='<b>%{y}</b><br>Students: %{x}<extra></extra>'
                 )])
-                fig_bar.update_layout(
+                fig_bar.update_layout(**get_plotly_layout(), 
                     title="📊 Students per Risk Level",
                     height=350,
                     xaxis=dict(
@@ -768,9 +761,6 @@ with tab3:
                         gridcolor='#f0f0f0'
                     ),
                     yaxis=dict(title='Risk Level', showgrid=False),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(color='#1a202c'),
                     margin=dict(t=50, b=40, l=80, r=40)
                 )
                 st.plotly_chart(fig_bar, use_container_width=True)

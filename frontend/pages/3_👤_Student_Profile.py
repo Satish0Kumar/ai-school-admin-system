@@ -30,6 +30,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 
@@ -439,12 +440,8 @@ with tab2:
                 textposition='outside'
             )])
             fig.update_layout(
-                title="Subject-wise Performance",
-                height=350,
+                **get_plotly_layout("Subject-wise Performance", height=350),
                 yaxis_title="Score (%)",
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c')
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -512,12 +509,8 @@ with tab3:
                 textposition='outside'
             )])
             fig.update_layout(
-                title="Risk Probability Distribution",
-                height=300,
+                **get_plotly_layout("Risk Probability Distribution", height=300),
                 yaxis_title="Probability (%)",
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c')
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -617,10 +610,8 @@ with tab4:
                     hole=0.4
                 )])
                 fig_sev.update_layout(
-                    title="Incidents by Severity",
-                    height=250,
+                    **get_plotly_layout("Incidents by Severity", height=250),
                     margin=dict(t=40, b=10, l=10, r=10),
-                    paper_bgcolor='white'
                 )
                 st.plotly_chart(fig_sev, use_container_width=True)
                 st.markdown("---")

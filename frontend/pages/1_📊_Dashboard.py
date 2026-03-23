@@ -34,6 +34,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 
@@ -362,14 +363,11 @@ with col_left:
                 text='Count'
             )
             fig.update_layout(
+                **get_plotly_layout(height=350),   # ← height goes HERE
                 showlegend=False,
-                height=350,
                 margin=dict(l=20, r=20, t=20, b=20),
                 xaxis_title="Grade",
                 yaxis_title="Number of Students",
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                font=dict(color='#1a202c', size=12)
             )
             fig.update_traces(textposition='outside', marker_line_color='#1e40af', marker_line_width=1.5)
             fig.update_xaxes(showgrid=False)
@@ -393,11 +391,9 @@ with col_right:
         textfont=dict(color='white', size=14, family='Arial Black')
     )])
     fig.update_layout(
+        **get_plotly_layout(title="", height=350),
         showlegend=True,
-        height=350,
         margin=dict(l=20, r=20, t=20, b=20),
-        paper_bgcolor='white',
-        font=dict(color='#1a202c', size=12)
     )
     st.plotly_chart(fig, use_container_width=True)
 

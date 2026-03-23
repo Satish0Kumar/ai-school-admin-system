@@ -31,6 +31,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 # ============================================
@@ -1062,7 +1063,7 @@ with tab3:
                         'Times Used: %{y}<extra></extra>'
                     )
                 )])
-                fig_usage.update_layout(
+                fig_usage.update_layout(**get_plotly_layout(), 
                     title="📧 Emails Sent per Template Type",
                     height=320,
                     xaxis=dict(
@@ -1075,9 +1076,6 @@ with tab3:
                         gridcolor='#f0f0f0',
                         rangemode='tozero'
                     ),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(color='#1a202c'),
                     margin=dict(t=50, b=60, l=50, r=20)
                 )
                 st.plotly_chart(fig_usage, use_container_width=True)

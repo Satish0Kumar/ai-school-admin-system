@@ -32,6 +32,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 # ============================================
@@ -357,26 +358,9 @@ with row2_col1:
         ))
 
         fig_line.update_layout(
-            title=dict(
-                text=f"📈 Daily Incident Trend — Last {days} Days",
-                font=dict(size=15, color='#1a202c')
-            ),
-            height=320,
-            xaxis=dict(
-                title='Date',
-                showgrid=True,
-                gridcolor='#f0f0f0',
-                tickformat='%d %b'
-            ),
-            yaxis=dict(
-                title='No. of Incidents',
-                showgrid=True,
-                gridcolor='#f0f0f0',
-                rangemode='tozero'
-            ),
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(color='#1a202c'),
+            **get_plotly_layout(f"📈 Daily Incident Trend — Last {days} Days", height=320),
+            xaxis=dict(title='Date', showgrid=True, tickformat='%d %b'),
+            yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
             hovermode='x unified',
             margin=dict(t=50, b=40, l=50, r=20)
         )
@@ -416,20 +400,8 @@ with row2_col2:
         )])
 
         fig_pie.update_layout(
-            title=dict(
-                text="🥧 Incidents by Type",
-                font=dict(size=15, color='#1a202c')
-            ),
-            height=320,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(color='#1a202c'),
-            legend=dict(
-                orientation='v',
-                x=1.02,
-                y=0.5,
-                font=dict(size=10)
-            ),
+            **get_plotly_layout("🥧 Incidents by Type", height=320),
+            legend=dict(orientation='v', x=1.02, y=0.5, font=dict(size=10)),
             margin=dict(t=50, b=20, l=10, r=10)
         )
         st.plotly_chart(fig_pie, use_container_width=True)
@@ -484,21 +456,9 @@ with row3_col1:
         )])
 
         fig_bar.update_layout(
-            title=dict(
-                text="⚠️ Incidents by Severity",
-                font=dict(size=15, color='#1a202c')
-            ),
-            height=320,
+            **get_plotly_layout("⚠️ Incidents by Severity", height=320),
             xaxis=dict(title='Severity Level', showgrid=False),
-            yaxis=dict(
-                title='No. of Incidents',
-                showgrid=True,
-                gridcolor='#f0f0f0',
-                rangemode='tozero'
-            ),
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(color='#1a202c'),
+            yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
             margin=dict(t=50, b=40, l=50, r=20)
         )
         st.plotly_chart(fig_bar, use_container_width=True)
@@ -536,21 +496,9 @@ with row3_col2:
         )])
 
         fig_grade.update_layout(
-            title=dict(
-                text="🎓 Incidents by Grade",
-                font=dict(size=15, color='#1a202c')
-            ),
-            height=320,
+            **get_plotly_layout("🎓 Incidents by Grade", height=320),
             xaxis=dict(title='Grade', showgrid=False),
-            yaxis=dict(
-                title='No. of Incidents',
-                showgrid=True,
-                gridcolor='#f0f0f0',
-                rangemode='tozero'
-            ),
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(color='#1a202c'),
+            yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
             margin=dict(t=50, b=40, l=50, r=20)
         )
         st.plotly_chart(fig_grade, use_container_width=True)

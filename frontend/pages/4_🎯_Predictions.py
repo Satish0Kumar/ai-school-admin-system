@@ -25,6 +25,7 @@ render_sidebar()
 # Require authentication
 SessionManager.require_auth()
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 
@@ -184,11 +185,8 @@ if students:
                     )
                     fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
                     fig.update_layout(
+                        **get_plotly_layout(height=300),
                         showlegend=False,
-                        height=300,
-                        plot_bgcolor='white',
-                        paper_bgcolor='white',
-                        font=dict(color='#1a202c')
                     )
                     st.plotly_chart(fig, use_container_width=True)
                     

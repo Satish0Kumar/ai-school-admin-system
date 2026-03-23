@@ -32,6 +32,7 @@ from frontend.utils.sidebar import render_sidebar
 render_sidebar()
 
 from frontend.utils.ui_helpers import inject_theme_css
+from frontend.utils.ui_helpers import get_plotly_layout
 inject_theme_css()
 
 
@@ -400,7 +401,25 @@ with tab1:
 
         if result.get('status') == 'success':
             action = result.get('action', 'saved')
-            st.success(f"✅ Marks {action} successfully!")
+            st.markdown(f"""
+            <div style="
+                background: #065f46;
+                border: 2px solid #10b981;
+                border-radius: 12px;
+                padding: 1.2rem 1.5rem;
+                margin: 1rem 0;
+            ">
+                <p style="color: #ffffff; font-size: 1rem; font-weight: 700; margin: 0;">
+                    ✅ Marks saved successfully!
+                </p>
+                <p style="color: #d1fae5; font-size: 0.9rem; margin: 0.4rem 0 0 0;">
+                    📊 GPA: {live_gpa:.1f}%  |  🔢 Total: {live_total:.1f}/500  |  ❌ Failed: {live_failed} subject(s)
+                </p>
+                <p style="color: #a7f3d0; font-size: 0.85rem; margin: 0.3rem 0 0 0;">
+                    🤖 Academic records updated → ML model will use latest scores
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
             st.balloons()
 
             # 🔄 Sync to academic_records so ML model sees latest marks
@@ -419,9 +438,9 @@ with tab1:
             # Show result summary
             rec = result['data']
             st.markdown(f"""
-            <div style='background:#f0fff4; padding:1rem 1.5rem;
-                        border-radius:10px; border-left:5px solid #00CC44;
-                        margin-top:1rem;'>
+            <div style='background:#065f46; padding:1rem 1.5rem;
+                        border-radius:10px; border-left:5px solid #10b981;
+                        margin-top:1rem; color:#ffffff;'>
                 <b>📋 Marks Summary</b><br/>
                 👤 Student: <b>{sel_student_label.split(' — ')[0]}</b> &nbsp;|&nbsp;
                 📋 Exam: <b>{sel_exam_type}</b> &nbsp;|&nbsp;
@@ -429,7 +448,9 @@ with tab1:
                 📊 GPA: <b>{rec.get('gpa')}%</b> &nbsp;|&nbsp;
                 🔢 Total: <b>{rec.get('total_marks')}/500</b> &nbsp;|&nbsp;
                 ❌ Failed: <b>{rec.get('failed_subjects')} subject(s)</b><br/>
-                🤖 <i>Academic records updated → ML model will use latest scores</i>
+                🤖 <i style="color:#a7f3d0;">
+                    Academic records updated → ML model will use latest scores
+                </i>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -587,23 +608,11 @@ with tab2:
                     )
 
                     fig_subj.update_layout(
-                        title=dict(
-                            text="📚 Subject-wise Average Scores",
-                            font=dict(size=14, color='#1a202c')
-                        ),
-                        height=340,
-                        xaxis=dict(title='Subject', showgrid=False),
-                        yaxis=dict(
-                            title='Average Score (%)',
-                            range=[0, 110],
-                            showgrid=True,
-                            gridcolor='#f0f0f0'
-                        ),
-                        plot_bgcolor='white',
-                        paper_bgcolor='white',
-                        font=dict(color='#1a202c'),
+                        **get_plotly_layout("📚 Subject-wise Average Scores", height=340),
                         margin=dict(t=50, b=40, l=50, r=20)
                     )
+                    fig_subj.update_xaxes(title='Subject', showgrid=False)
+                    fig_subj.update_yaxes(title='Average Score (%)', range=[0, 110], showgrid=True)
                     st.plotly_chart(fig_subj, use_container_width=True)
 
             # GPA distribution donut chart
@@ -633,19 +642,7 @@ with tab2:
                     )])
 
                     fig_dist.update_layout(
-                        title=dict(
-                            text="🎓 GPA Distribution",
-                            font=dict(size=14, color='#1a202c')
-                        ),
-                        height=340,
-                        plot_bgcolor='white',
-                        paper_bgcolor='white',
-                        font=dict(color='#1a202c'),
-                        legend=dict(
-                            orientation='v',
-                            x=1.02, y=0.5,
-                            font=dict(size=10)
-                        ),
+                        **get_plotly_layout("🎓 GPA Distribution", height=340),
                         margin=dict(t=50, b=20, l=10, r=10)
                     )
                     st.plotly_chart(fig_dist, use_container_width=True)
@@ -916,14 +913,11 @@ with tab3:
                             annotation_text="Pass Mark"
                         )
                         fig_mini.update_layout(
-                            height=220,
+                            **get_plotly_layout(height=220),
                             margin=dict(t=20, b=20, l=30, r=20),
-                            yaxis=dict(range=[0, 110]),
-                            plot_bgcolor='white',
-                            paper_bgcolor='white',
-                            font=dict(size=11, color='#1a202c'),
                             showlegend=False
                         )
+                        fig_mini.update_yaxes(range=[0, 110])
                         st.plotly_chart(fig_mini, use_container_width=True)
 
             st.markdown("---")

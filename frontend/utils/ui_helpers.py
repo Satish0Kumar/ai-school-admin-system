@@ -329,70 +329,342 @@ def bulk_action_bar(selected_ids, actions):
 
 def inject_theme_css():
     """
-    Inject light or dark mode CSS based on session_state['dark_mode'].
-    Call this on EVERY page right after render_sidebar().
+    Master theme injection — Dark mode by default.
+    Uses !important overrides + CSS variable trick to beat inline styles.
     """
-    dark = st.session_state.get('dark_mode', False)
+    if 'dark_mode' not in st.session_state:
+        st.session_state['dark_mode'] = True
+
+    dark = st.session_state.get('dark_mode', True)
 
     if dark:
         theme = """
         <style>
-            /* ── Dark Mode ── */
-            .stApp, [data-testid="stAppViewContainer"] {
-                background-color: #0f172a !important; color: #e2e8f0 !important;
+            /* ══ DARK MODE — NUCLEAR OVERRIDE ══ */
+
+            /* Base */
+            html, body,
+            .stApp,
+            [data-testid="stAppViewContainer"],
+            [data-testid="stMain"],
+            section.main, .main,
+            [data-testid="stMainBlockContainer"],
+            [data-testid="block-container"] {
+                background-color: #0f172a !important;
+                color: #e2e8f0 !important;
             }
-            [data-testid="stSidebar"] {
+
+            /* Sidebar */
+            [data-testid="stSidebar"],
+            [data-testid="stSidebar"] > div,
+            [data-testid="stSidebar"] section {
                 background-color: #1e293b !important;
                 border-right: 1px solid #334155 !important;
             }
-            .main { background-color: #0f172a !important; }
-            div[data-testid="stMetric"] {
+            [data-testid="stSidebar"] * {
+                color: #cbd5e1 !important;
+            }
+            [data-testid="stSidebarContent"] {
+                background-color: #1e293b !important;
+            }
+
+            /* ALL text everywhere */
+            h1, h2, h3, h4, h5, h6,
+            p, span, div, label, li,
+            td, th, caption, small,
+            .stMarkdown, .stText,
+            [data-testid="stMarkdownContainer"] * {
+                color: #e2e8f0 !important;
+            }
+
+            /* Override hardcoded color inline styles on headings/paragraphs */
+            [style*="color:#1a202c"],
+            [style*="color: #1a202c"],
+            [style*="color:#2d3748"],
+            [style*="color: #2d3748"],
+            [style*="color:#4a5568"],
+            [style*="color: #4a5568"],
+            [style*="color:#718096"],
+            [style*="color: #718096"] {
+                color: #e2e8f0 !important;
+            }
+
+            /* Override hardcoded white/light backgrounds */
+            [style*="background:white"],
+            [style*="background: white"],
+            [style*="background-color:white"],
+            [style*="background-color: white"],
+            [style*="background:#f7fafc"],
+            [style*="background: #f7fafc"],
+            [style*="background:#edf2f7"],
+            [style*="background: #edf2f7"],
+            [style*="background:#f0fff4"],
+            [style*="background: #f0fff4"],
+            [style*="background:#fff5f5"],
+            [style*="background: #fff5f5"],
+            [style*="background:#eff6ff"],
+            [style*="background: #eff6ff"] {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+            }
+
+            /* Metric cards */
+            [data-testid="stMetric"],
+            [data-testid="stMetric"] > div {
                 background: #1e293b !important;
                 border: 1px solid #334155 !important;
-                border-radius: 10px; padding: 1rem;
+                border-radius: 10px !important;
+                padding: 0.75rem !important;
             }
-            .stDataFrame, [data-testid="stTable"] {
-                background: #1e293b !important; color: #e2e8f0 !important;
+            [data-testid="stMetricLabel"] * { color: #94a3b8 !important; }
+            [data-testid="stMetricValue"] * { color: #f1f5f9 !important; }
+            [data-testid="stMetricDelta"] * { color: #34d399 !important; }
+
+            /* Forms */
+            [data-testid="stForm"],
+            [data-testid="stForm"] > div {
+                background: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 10px !important;
             }
-            .stTextInput input, .stSelectbox select, .stTextArea textarea {
-                background: #1e293b !important; color: #e2e8f0 !important;
+
+            /* Inputs */
+            .stTextInput input,
+            .stTextArea textarea,
+            .stNumberInput input,
+            .stDateInput input,
+            .stTimeInput input,
+            [data-testid="stNumberInput"] input {
+                background-color: #0f172a !important;
+                color: #e2e8f0 !important;
+                border: 1px solid #475569 !important;
+                border-radius: 8px !important;
+            }
+            input::placeholder, textarea::placeholder {
+                color: #64748b !important;
+            }
+            .stTextInput label, .stTextArea label,
+            .stNumberInput label, .stDateInput label,
+            .stSelectbox label, .stMultiselect label,
+            .stSlider label, .stCheckbox label,
+            .stRadio label, .stToggle label {
+                color: #94a3b8 !important;
+            }
+
+            /* Selectbox / Multiselect */
+            .stSelectbox > div > div,
+            .stMultiselect > div > div,
+            [data-baseweb="select"] > div,
+            [data-baseweb="popover"] {
+                background-color: #1e293b !important;
+                color: #e2e8f0 !important;
                 border-color: #475569 !important;
             }
-            .student-card, .info-box, .incident-card {
-                background: #1e293b !important;
-                border-color: #334155 !important;
+            [data-baseweb="menu"],
+            [data-baseweb="menu"] li,
+            [role="listbox"],
+            [role="option"] {
+                background-color: #1e293b !important;
                 color: #e2e8f0 !important;
             }
-            .student-name, .info-value { color: #f1f5f9 !important; }
-            .student-info, .info-label { color: #94a3b8 !important; }
-            h1, h2, h3, h4, p, span, label { color: #e2e8f0 !important; }
-            .stButton > button {
-                background: #1e293b !important;
-                color: #e2e8f0 !important;
-                border-color: #475569 !important;
+            [role="option"]:hover {
+                background-color: #334155 !important;
             }
-            .stButton > button[kind="primary"] {
+
+            /* Slider — the track and thumb */
+            [data-testid="stSlider"] > div > div > div {
+                background: #475569 !important;
+            }
+            [data-testid="stSlider"] [role="slider"] {
                 background: #3b82f6 !important;
-                color: white !important;
+                border-color: #3b82f6 !important;
             }
+            [data-testid="stSlider"] p,
+            [data-testid="stSlider"] span,
+            [data-testid="stSlider"] div {
+                color: #e2e8f0 !important;
+            }
+
+            /* Buttons */
+            .stButton > button,
+            [data-testid="stFormSubmitButton"] button {
+                background-color: #1e293b !important;
+                color: #e2e8f0 !important;
+                border: 1px solid #475569 !important;
+            }
+            .stButton > button:hover {
+                background-color: #334155 !important;
+            }
+            .stButton > button[kind="primary"],
+            [data-testid="stFormSubmitButton"] button[kind="primary"] {
+                background-color: #3b82f6 !important;
+                color: white !important;
+                border-color: #3b82f6 !important;
+            }
+            .stButton > button[kind="primary"]:hover {
+                background-color: #2563eb !important;
+            }
+            [data-testid="stDownloadButton"] button {
+                background-color: #1e293b !important;
+                color: #e2e8f0 !important;
+                border: 1px solid #475569 !important;
+            }
+
+            /* Tabs */
+            .stTabs [data-baseweb="tab-list"] {
+                background-color: #1e293b !important;
+                border-bottom: 2px solid #334155 !important;
+            }
+            .stTabs [data-baseweb="tab"] {
+                color: #94a3b8 !important;
+                background: transparent !important;
+            }
+            .stTabs [aria-selected="true"] {
+                color: #3b82f6 !important;
+                border-bottom: 3px solid #3b82f6 !important;
+            }
+            .stTabs [data-baseweb="tab-panel"] {
+                background-color: #0f172a !important;
+            }
+
+            /* Expanders */
             [data-testid="stExpander"] {
-                background: #1e293b !important;
+                background-color: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 10px !important;
+            }
+            [data-testid="stExpander"] summary,
+            [data-testid="stExpander"] summary * {
+                color: #e2e8f0 !important;
+            }
+            [data-testid="stExpanderDetails"] {
+                background-color: #1e293b !important;
+            }
+
+            /* DataFrames */
+            [data-testid="stDataFrame"] *,
+            [data-testid="stTable"] * {
+                background-color: #1e293b !important;
+                color: #e2e8f0 !important;
+            }
+            [data-testid="stDataFrame"] th {
+                background-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+
+            /* Alerts */
+            [data-testid="stAlert"] {
+                background-color: #1e293b !important;
+            }
+            [data-testid="stAlert"] * {
+                color: #e2e8f0 !important;
+            }
+
+            /* Plotly chart containers */
+            .js-plotly-plot,
+            .plot-container,
+            .plotly,
+            .svg-container {
+                background-color: transparent !important;
+            }
+            [data-testid="stPlotlyChart"] {
+                background-color: #1e293b !important;
+                border-radius: 10px !important;
+                padding: 0.5rem !important;
+            }
+
+            /* Top right clock / status bar */
+            [data-testid="stStatusWidget"] *,
+            [data-testid="stToolbar"] * {
+                color: #94a3b8 !important;
+                fill: #94a3b8 !important;
+            }
+            header[data-testid="stHeader"] {
+                background-color: #0f172a !important;
+                border-bottom: 1px solid #334155 !important;
+            }
+
+            /* Page links in sidebar */
+            [data-testid="stPageLink"] a {
+                color: #94a3b8 !important;
+                border-radius: 8px !important;
+            }
+            [data-testid="stPageLink"] a:hover,
+            [data-testid="stPageLink"][aria-current="page"] a {
+                color: #f1f5f9 !important;
+                background-color: #334155 !important;
+            }
+
+            [data-testid="stAlert"] {
+                background-color: rgba(255, 255, 255, 0.08) !important;
+                border-width: 2px !important;
+            }
+            [data-testid="stAlert"] p {
+                color: #ffffff !important;
+                font-weight: 600 !important;
+            }
+
+            /* Dividers */
+            hr, [data-testid="stDivider"] {
                 border-color: #334155 !important;
             }
-            hr { border-color: #334155 !important; }
+
+            /* Code */
+            code, pre, [data-testid="stCode"] {
+                background-color: #1e293b !important;
+                color: #34d399 !important;
+                border: 1px solid #334155 !important;
+            }
+
+            /* Checkboxes & Radio */
+            .stCheckbox span, .stRadio span { color: #e2e8f0 !important; }
+            [data-baseweb="checkbox"] div { border-color: #475569 !important; }
+
+            /* Caption text */
+            .stCaptionContainer, .stCaptionContainer * {
+                color: #64748b !important;
+            }
+
+            /* Custom score/kpi cards used in Marks Entry */
+            .score-card, .kpi-card, .student-card,
+            .info-box, .incident-card, .metric-card {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #e2e8f0 !important;
+            }
+            .score-label, .kpi-label { color: #94a3b8 !important; }
+            .score-value, .kpi-value,
+            .student-name, .info-value { color: #f1f5f9 !important; }
+            .section-header {
+                color: #f1f5f9 !important;
+                border-bottom-color: #3b82f6 !important;
+            }
+
+            /* Shortcut hints box */
+            [data-testid="stSidebar"] kbd {
+                background: #334155 !important;
+                color: #e2e8f0 !important;
+            }
         </style>
         """
     else:
         theme = """
         <style>
-            /* ── Light Mode (default) ── */
-            .stApp { background-color: #f7fafc !important; }
+            .stApp,
+            [data-testid="stAppViewContainer"],
+            section.main, .main {
+                background-color: #f7fafc !important;
+                color: #1a202c !important;
+            }
+            [data-testid="stSidebar"] {
+                background-color: white !important;
+                border-right: 1px solid #e2e8f0 !important;
+            }
         </style>
         """
 
     st.markdown(theme, unsafe_allow_html=True)
     inject_responsive_css()
-    # Apply font size preference
     from frontend.utils.preferences import apply_font_size, init_prefs
     init_prefs()
     apply_font_size()
@@ -494,3 +766,31 @@ def responsive_columns(desktop_spec, mobile_cols=1):
     On mobile  → CSS handles stacking automatically.
     """
     return st.columns(desktop_spec)
+
+
+
+def get_plotly_layout(title="", height=340, extra=None):
+    import streamlit as st
+    dark = st.session_state.get('dark_mode', True)
+
+    bg   = "#1e293b" if dark else "white"
+    text = "#e2e8f0" if dark else "#1a202c"
+    grid = "#334155" if dark else "#f0f0f0"
+
+    layout = dict(
+        title         = dict(text=title, font=dict(size=14, color=text)),
+        height        = height,
+        plot_bgcolor  = bg,
+        paper_bgcolor = bg,
+        font          = dict(color=text, size=12),
+        xaxis         = dict(gridcolor=grid, color=text,
+                             linecolor=grid, tickfont=dict(color=text)),
+        yaxis         = dict(gridcolor=grid, color=text,
+                             linecolor=grid, tickfont=dict(color=text)),
+        legend        = dict(font=dict(color=text), bgcolor=bg,
+                             bordercolor=grid),
+        # ← NO margin here, so pages can pass their own freely
+    )
+    if extra:
+        layout.update(extra)
+    return layout
