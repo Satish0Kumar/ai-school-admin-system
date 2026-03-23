@@ -403,6 +403,19 @@ with tab1:
             st.success(f"✅ Marks {action} successfully!")
             st.balloons()
 
+            # 🔄 Sync to academic_records so ML model sees latest marks
+            from backend.services.prediction_service import PredictionService
+            saved_id = result.get('data', {}).get('id')
+            if saved_id:
+                sync_result = PredictionService.sync_marks_to_academic_record(
+                    student_id, saved_id
+                )
+                if sync_result.get('status') == 'success':
+                    st.info("🔄 Academic record synced for ML predictions")
+                else:
+                    st.warning(f"⚠️ Sync warning: {sync_result.get('error')}")
+
+
             # Show result summary
             rec = result['data']
             st.markdown(f"""

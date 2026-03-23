@@ -15,8 +15,10 @@ def log_incident():
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        result = IncidentService.log_incident(data)
-        if 'error' in result:
+        claims      = get_jwt()
+        reporter_id = int(claims.get('user_id') or claims.get('sub') or 1)
+        result      = IncidentService.log_incident(data, reporter_id=reporter_id)
+        if result.get('status') == 'error':
             return jsonify(result), 400
         return jsonify(result), 201
     except Exception as e:
@@ -29,16 +31,22 @@ def log_incident():
 @jwt_required()
 def get_all_incidents():
     try:
-        grade    = request.args.get('grade', type=int)
-        section  = request.args.get('section')
-        severity = request.args.get('severity')
-        limit    = request.args.get('limit', 50, type=int)
-        result   = IncidentService.get_all_incidents(
-            grade    = grade,
-            section  = section,
-            severity = severity,
-            limit    = limit
-        )
+        filters = {
+            'limit': request.args.get('limit', 50, type=int)
+        }
+        grade     = request.args.get('grade',     type=int)
+        section   = request.args.get('section')
+        severity  = request.args.get('severity')
+        date_from = request.args.get('date_from')
+        date_to   = request.args.get('date_to')
+
+        if grade:     filters['grade']     = grade
+        if section:   filters['section']   = section
+        if severity:  filters['severity']  = severity
+        if date_from: filters['date_from'] = date_from
+        if date_to:   filters['date_to']   = date_to
+
+        result = IncidentService.get_incidents(filters)
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Get incidents error: {e}")
@@ -63,8 +71,8 @@ def get_student_incidents(student_id):
 @jwt_required()
 def get_incident_stats():
     try:
-        grade  = request.args.get('grade', type=int)
-        result = IncidentService.get_incident_stats(grade=grade)
+        date_range = request.args.get('date_range', '30_days')
+        result     = IncidentService.get_incident_stats(date_range=date_range)
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Get incident stats error: {e}")
@@ -91,7 +99,7 @@ def update_incident(incident_id):
     try:
         data   = request.get_json()
         result = IncidentService.update_incident(incident_id, data)
-        if 'error' in result:
+        if result.get('status') == 'error':
             return jsonify(result), 404
         return jsonify(result), 200
     except Exception as e:
@@ -108,7 +116,7 @@ def delete_incident(incident_id):
         if claims.get('role') != 'admin':
             return jsonify({'error': 'Admin access required'}), 403
         result = IncidentService.delete_incident(incident_id)
-        if 'error' in result:
+        if result.get('status') == 'error':
             return jsonify(result), 404
         return jsonify(result), 200
     except Exception as e:

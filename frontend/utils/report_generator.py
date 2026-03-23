@@ -20,30 +20,31 @@ def generate_student_report(details: dict) -> str:
     generated_at = datetime.now().strftime("%d %B %Y, %I:%M %p")
 
     # ── Academic section ──────────────────────────────────
-    academic_html = ""
     if details.get('academic_records'):
         rec = details['academic_records'][0]
         academic_html = f"""
         <h2>📚 Academic Performance</h2>
         <table>
             <tr><th>Semester</th><td>{rec.get('semester', 'N/A')}</td>
-                <th>GPA</th><td>{rec.get('current_gpa', 'N/A')}%</td></tr>
-            <tr><th>Math</th><td>{rec.get('math_score', 'N/A')}%</td>
-                <th>Science</th><td>{rec.get('science_score', 'N/A')}%</td></tr>
-            <tr><th>English</th><td>{rec.get('english_score', 'N/A')}%</td>
-                <th>Social</th><td>{rec.get('social_score', 'N/A')}%</td></tr>
+                <th>GPA</th><td>{float(rec.get('current_gpa') or 0):.1f}%</td></tr>
+            <tr><th>Math</th><td>{float(rec.get('math_score') or 0):.1f}%</td>
+                <th>Science</th><td>{float(rec.get('science_score') or 0):.1f}%</td></tr>
+            <tr><th>English</th><td>{float(rec.get('english_score') or 0):.1f}%</td>
+                <th>Social</th><td>{float(rec.get('social_score') or 0):.1f}%</td></tr>
+            <tr><th>Language</th><td>{float(rec.get('language_score') or 0):.1f}%</td>
+                <th>Assignment Rate</th><td>{float(rec.get('assignment_submission_rate') or 0):.1f}%</td></tr>
             <tr><th>Failed Subjects</th><td>{rec.get('failed_subjects', 0)}</td>
-                <th>Assignment Rate</th><td>{rec.get('assignment_submission_rate', 'N/A')}%</td></tr>
+                <th>Total Subjects</th><td>{rec.get('total_subjects', 5)}</td></tr>
         </table>
         """
     else:
         academic_html = "<h2>📚 Academic Performance</h2><p>No academic records available.</p>"
 
     # ── Risk section ──────────────────────────────────────
-    risk_html = ""
     if details.get('latest_risk_prediction'):
         pred       = details['latest_risk_prediction']
         risk_label = pred.get('risk_label', 'N/A')
+
         risk_colors = {
             'Low': '#22543d', 'Medium': '#7c2d12',
             'High': '#742a2a', 'Critical': '#63171b'
@@ -54,27 +55,30 @@ def generate_student_report(details: dict) -> str:
         }
         color = risk_colors.get(risk_label, '#333')
         bg    = risk_bg.get(risk_label, '#eee')
-        # AFTER (fixed): Extract to variables BEFORE the f-string
+
+        # Extract to variables BEFORE f-string to avoid NoneType format errors
         conf     = float(pred.get('confidence_score')     or 0)
         prob_low = float(pred.get('probability_low')      or 0)
         prob_med = float(pred.get('probability_medium')   or 0)
         prob_hi  = float(pred.get('probability_high')     or 0)
         prob_cri = float(pred.get('probability_critical') or 0)
+        pred_date = pred.get('prediction_date', 'N/A')
 
         risk_html = f"""
-        ...
-                <td>{conf:.1f}%</td></tr>
+        <h2>🎯 Risk Assessment</h2>
+        <div style="display:inline-block; background:{bg}; color:{color};
+                    padding:0.4rem 1.2rem; border-radius:20px;
+                    font-weight:700; font-size:1rem; margin-bottom:1rem;">
+            {risk_label} Risk
+        </div>
+        <table>
+            <tr><th>Risk Level</th><td>{risk_label}</td>
+                <th>Confidence</th><td>{conf:.1f}%</td></tr>
             <tr><th>Prob. Low</th><td>{prob_low:.1f}%</td>
                 <th>Prob. Medium</th><td>{prob_med:.1f}%</td></tr>
             <tr><th>Prob. High</th><td>{prob_hi:.1f}%</td>
                 <th>Prob. Critical</th><td>{prob_cri:.1f}%</td></tr>
-
-        </table>
-
-            <tr><th>Prob. Low</th><td>{pred.get('probability_low', 0):.1f}%</td>
-                <th>Prob. Medium</th><td>{pred.get('probability_medium', 0):.1f}%</td></tr>
-            <tr><th>Prob. High</th><td>{pred.get('probability_high', 0):.1f}%</td>
-                <th>Prob. Critical</th><td>{pred.get('probability_critical', 0):.1f}%</td></tr>
+            <tr><th>Predicted On</th><td colspan="3">{pred_date}</td></tr>
         </table>
         """
     else:

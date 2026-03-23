@@ -127,33 +127,7 @@ if not student_id:
         st.switch_page("pages/2_👥_Students.py")
     st.stop()
 
-# ============================================
-# SIDEBAR
-# ============================================
-user = SessionManager.get_user()
-with st.sidebar:
-    st.markdown("### 🎓 ScholarSense")
-    st.markdown("---")
-    st.markdown(f"""
-    <div style="background: #edf2f7; padding: 1rem; border-radius: 10px; border: 1px solid #cbd5e0;">
-        <p style="margin: 0; font-weight: 700; color: #1a202c;">{user['full_name']}</p>
-        <p style="margin: 0.25rem 0 0 0; color: #4a5568; font-size: 0.9rem;">{user['role'].title()}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("---")
-    st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard", use_container_width=True):
-        st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students", use_container_width=True):
-        st.switch_page("pages/2_👥_Students.py")
-    if st.button("🎯 Predictions", use_container_width=True):
-        st.switch_page("pages/4_🎯_Predictions.py")
-    if st.button("📝 Log Incident", use_container_width=True):
-        st.switch_page("pages/6_📝_Incident_Logging.py")
-    st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
-        SessionManager.logout()
-        st.switch_page("app.py")
+
 
 # ============================================
 # FETCH STUDENT DETAILS
@@ -296,6 +270,111 @@ with tab1:
     with col3:
         if st.button("🚨 Log Incident", use_container_width=True):
             st.switch_page("pages/6_📝_Incident_Logging.py")
+    # ── Academic Record Form ──────────────────────────────────
+    if st.session_state.get('show_academic_form'):
+        st.markdown("---")
+        st.markdown("### 📝 Add Academic Record")
+
+        with st.form("academic_record_form"):
+            r1, r2 = st.columns(2)
+            with r1:
+                semester = st.selectbox(
+                    "Semester *",
+                    ["Semester 1 - 2025", "Semester 2 - 2025",
+                     "Semester 1 - 2026", "Semester 2 - 2026"]
+                )
+                current_gpa = st.number_input(
+                    "Current GPA (%) *", min_value=0.0,
+                    max_value=100.0, value=60.0, step=0.5
+                )
+                previous_gpa = st.number_input(
+                    "Previous GPA (%)", min_value=0.0,
+                    max_value=100.0, value=60.0, step=0.5
+                )
+                failed_subjects = st.number_input(
+                    "Failed Subjects", min_value=0,
+                    max_value=10, value=0
+                )
+                assignment_rate = st.number_input(
+                    "Assignment Submission Rate (%)",
+                    min_value=0.0, max_value=100.0,
+                    value=80.0, step=1.0
+                )
+            with r2:
+                math_score     = st.number_input("Math Score (%)",     0.0, 100.0, 60.0, 0.5)
+                science_score  = st.number_input("Science Score (%)",  0.0, 100.0, 60.0, 0.5)
+                english_score  = st.number_input("English Score (%)",  0.0, 100.0, 60.0, 0.5)
+                social_score   = st.number_input("Social Score (%)",   0.0, 100.0, 60.0, 0.5)
+                language_score = st.number_input("Language Score (%)", 0.0, 100.0, 60.0, 0.5)
+
+            fc1, fc2 = st.columns(2)
+            with fc1:
+                submit = st.form_submit_button(
+                    "💾 Save Academic Record",
+                    type="primary",
+                    use_container_width=True
+                )
+            with fc2:
+                cancel = st.form_submit_button(
+                    "✖ Cancel",
+                    use_container_width=True
+                )
+
+        if cancel:
+            st.session_state['show_academic_form'] = False
+            st.rerun()
+
+        if submit:
+            payload = {
+                "student_id":                  student_id,
+                "semester":                    semester,
+                "current_gpa":                 current_gpa,
+                "previous_gpa":                previous_gpa,
+                "grade_trend":                 round(current_gpa - previous_gpa, 2),
+                "failed_subjects":             int(failed_subjects),
+                "total_subjects":              5,
+                "assignment_submission_rate":  assignment_rate,
+                "math_score":                  math_score,
+                "science_score":               science_score,
+                "english_score":               english_score,
+                "social_score":                social_score,
+                "language_score":              language_score,
+            }
+            try:
+                # ✅ REPLACE WITH:
+                payload['student_id'] = student_id   # make sure student_id is in body
+
+                resp = requests.post(
+                    f"{API_BASE}/academics",          # ← correct route
+                    headers=get_auth_headers(),
+                    json=payload,
+                    timeout=10
+                )
+
+                # ✅ REPLACE WITH:
+                payload['student_id'] = student_id  # ensure student_id is in body
+
+                resp = requests.post(
+                    f"{API_BASE}/academics",        # ← fixed URL
+                    headers=get_auth_headers(),
+                    json=payload,
+                    timeout=10
+                )
+
+                if resp.status_code == 201:
+                    st.success("✅ Academic record saved!")
+                    st.session_state['show_academic_form'] = False
+                    st.rerun()
+                else:
+                    try:
+                        result = resp.json()
+                        st.error(f"❌ {result.get('error', 'Failed to save')}")
+                    except:
+                        st.error(f"❌ Server error: {resp.status_code}")
+
+            except Exception as e:
+                st.error(f"❌ Connection error: {e}")
+
 
     # ── Danger Zone ───────────────────────────────────────────
     st.markdown("---")
@@ -409,17 +488,18 @@ with tab3:
                 <p style="font-size: 2rem; margin: 1rem 0;">
                     <span class="risk-badge {risk_class}">{risk_label}</span>
                 </p>
-                <p class="info-value">{pred['confidence_score']:.1f}% Confidence</p>
+                <p class=\"info-value\">{float(pred.get('confidence_score') or 0):.1f}% Confidence</p>
             </div>
             """, unsafe_allow_html=True)
 
+        # ✅ REPLACE WITH:
         with col2:
             categories = ['Low', 'Medium', 'High', 'Critical']
             probs      = [
-                pred['probability_low'],
-                pred['probability_medium'],
-                pred['probability_high'],
-                pred['probability_critical']
+                float(pred.get('probability_low')      or 0),
+                float(pred.get('probability_medium')   or 0),
+                float(pred.get('probability_high')     or 0),
+                float(pred.get('probability_critical') or 0)
             ]
             colors = ['#10b981', '#f59e0b', '#ef4444', '#b91c1c']
 
@@ -427,7 +507,8 @@ with tab3:
                 x=categories,
                 y=probs,
                 marker_color=colors,
-                text=[f"{p:.1f}%" for p in probs],
+                text=[f"{p:.1f}%" for p in probs],   # ✅ safe now
+
                 textposition='outside'
             )])
             fig.update_layout(

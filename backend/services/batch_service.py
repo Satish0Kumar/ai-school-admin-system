@@ -85,16 +85,39 @@ class BatchService:
                     ).first()
 
                     if not academic:
-                        results.append({
-                            "student_id":   student.id,
-                            "student_code": student.student_id,
-                            "student_name": student.full_name,
-                            "grade":        student.grade,
-                            "section":      student.section,
-                            "status":       "skipped",
-                            "reason":       "No academic record found"
-                        })
-                        skipped += 1
+                        # Still run prediction — PredictionService uses default values internally
+                        prediction = PredictionService.make_prediction(
+                            student.id,
+                            predicted_by=triggered_by
+                        )
+                        if 'error' in prediction:
+                            results.append({
+                                "student_id":   student.id,
+                                "student_code": student.student_id,
+                                "student_name": student.full_name,
+                                "grade":        student.grade,
+                                "section":      student.section,
+                                "status":       "skipped",
+                                "reason":       prediction['error']   # will say "No academic records found"
+                            })
+                            skipped += 1
+                        else:
+                            risk_label = prediction.get('risk_label', 'Low')
+                            if risk_label in risk_summary:
+                                risk_summary[risk_label] += 1
+                            results.append({
+                                "student_id":       student.id,
+                                "student_code":     student.student_id,
+                                "student_name":     student.full_name,
+                                "grade":            student.grade,
+                                "section":          student.section,
+                                "status":           "success",
+                                "risk_label":       risk_label,
+                                "confidence_score": prediction.get('confidence_score', 0),
+                                "gpa":              0,
+                                "failed_subjects":  0
+                            })
+                            success += 1
                         continue
 
                     # Run prediction via PredictionService

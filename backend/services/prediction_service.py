@@ -130,7 +130,7 @@ class PredictionService:
             present_days = db.query(func.count(Attendance.id)).filter(
                 Attendance.student_id == student_id,
                 Attendance.attendance_date >= thirty_days_ago,
-                Attendance.status == 'present'
+                Attendance.status == 'Present'
             ).scalar() or 0
             
             attendance_rate = (present_days / total_days * 100) if total_days > 0 else 95.0
@@ -384,6 +384,59 @@ class PredictionService:
             } for student, prediction in results]
         finally:
             db.close()
+
+    @staticmethod
+    def sync_marks_to_academic_record(student_id: int, marks_entry_id: int):
+        """Copy latest marks entry into academic_records so ML model sees it"""
+        db = next(get_db())
+        try:
+            from backend.database.models import MarksEntry
+            marks = db.query(MarksEntry).filter(
+                MarksEntry.id == marks_entry_id
+            ).first()
+            if not marks:
+                return {'error': 'Marks entry not found'}
+
+            existing = db.query(AcademicRecord).filter(
+                AcademicRecord.student_id == student_id,
+                AcademicRecord.semester == marks.semester
+            ).first()
+
+            if existing:
+                existing.current_gpa                = marks.gpa
+                existing.failed_subjects            = marks.failed_subjects
+                existing.assignment_submission_rate = marks.assignment_submission_rate
+                existing.math_score                 = marks.math_score
+                existing.science_score              = marks.science_score
+                existing.english_score              = marks.english_score
+                existing.social_score               = marks.social_score
+                existing.language_score             = marks.language_score
+                existing.updated_at                 = datetime.utcnow()
+            else:
+                new_record = AcademicRecord(
+                    student_id                 = student_id,
+                    semester                   = marks.semester,
+                    current_gpa                = marks.gpa,
+                    failed_subjects            = marks.failed_subjects,
+                    total_subjects             = 5,
+                    assignment_submission_rate = marks.assignment_submission_rate,
+                    math_score                 = marks.math_score,
+                    science_score              = marks.science_score,
+                    english_score              = marks.english_score,
+                    social_score               = marks.social_score,
+                    language_score             = marks.language_score,
+                )
+                db.add(new_record)
+
+            db.commit()
+            return {'status': 'success', 'message': 'Marks synced to academic record'}
+        except Exception as e:
+            db.rollback()
+            return {'error': str(e)}
+        finally:
+            db.close()
+
+
 
 # Initialize model on import
 PredictionService.load_model()
