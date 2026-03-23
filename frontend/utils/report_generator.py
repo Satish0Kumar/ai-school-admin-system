@@ -54,19 +54,21 @@ def generate_student_report(details: dict) -> str:
         }
         color = risk_colors.get(risk_label, '#333')
         bg    = risk_bg.get(risk_label, '#eee')
+        # AFTER (fixed): Extract to variables BEFORE the f-string
+        conf     = float(pred.get('confidence_score')     or 0)
+        prob_low = float(pred.get('probability_low')      or 0)
+        prob_med = float(pred.get('probability_medium')   or 0)
+        prob_hi  = float(pred.get('probability_high')     or 0)
+        prob_cri = float(pred.get('probability_critical') or 0)
+
         risk_html = f"""
-        <h2>🎯 Risk Assessment</h2>
-        <table>
-            <tr><th>Risk Level</th>
-                <td><span style="background:{bg}; color:{color};
-                    padding:4px 12px; border-radius:20px;
-                    font-weight:700;">{risk_label}</span></td>
-                <th>Confidence</th>
-                <td>{float(pred.get('confidence_score') or 0):.1f}%</td></tr>
-            <tr><th>Prob. Low</th><td>{float(pred.get('probability_low') or 0):.1f}%</td>
-                <th>Prob. Medium</th><td>{float(pred.get('probability_medium') or 0):.1f}%</td></tr>
-            <tr><th>Prob. High</th><td>{float(pred.get('probability_high') or 0):.1f}%</td>
-                <th>Prob. Critical</th><td>{float(pred.get('probability_critical') or 0):.1f}%</td></tr>
+        ...
+                <td>{conf:.1f}%</td></tr>
+            <tr><th>Prob. Low</th><td>{prob_low:.1f}%</td>
+                <th>Prob. Medium</th><td>{prob_med:.1f}%</td></tr>
+            <tr><th>Prob. High</th><td>{prob_hi:.1f}%</td>
+                <th>Prob. Critical</th><td>{prob_cri:.1f}%</td></tr>
+
         </table>
 
             <tr><th>Prob. Low</th><td>{pred.get('probability_low', 0):.1f}%</td>

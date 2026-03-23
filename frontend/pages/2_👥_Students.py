@@ -279,8 +279,8 @@ if students:
             with col0:
                 checked = st.checkbox(
                     "Select",
-                    key=f"bulk_{s['id']}",
-                    label_visibility="hidden"  # visually hidden but accessible
+                    key=f"bulk_{student['id']}",    # ← use 'student'
+                    label_visibility="hidden"
                 )
 
                 if checked:

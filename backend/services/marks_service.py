@@ -543,3 +543,57 @@ class MarksService:
             db.rollback()
             print(f"❌ Update marks error: {e}")
             return {"status": "error", "message": str(e)}
+        
+    
+    @classmethod
+    def get_grade_stats(cls, grade, section=None):
+        """Returns avg scores per subject for a grade/section"""
+        from backend.database import get_db_connection
+        conn = get_db_connection()
+        try:
+            cur = conn.cursor()
+            query = """
+                SELECT
+                    AVG(math_score) as math, AVG(science_score) as science,
+                    AVG(english_score) as english, AVG(social_score) as social,
+                    AVG(current_gpa) as gpa, COUNT(*) as total
+                FROM academic_records ar
+                JOIN students s ON ar.student_id = s.id
+                WHERE s.grade = %s AND s.is_active = true
+            """
+            params = [grade]
+            if section:
+                query += " AND s.section = %s"
+                params.append(section)
+            cur.execute(query, params)
+            row = cur.fetchone()
+            return dict(row) if row else {}
+        finally:
+            conn.close()
+
+    @classmethod
+    def get_failed_students(cls, grade=None, semester=None):
+        """Returns students with failed_subjects > 0"""
+        from backend.database import get_db_connection
+        conn = get_db_connection()
+        try:
+            cur = conn.cursor()
+            query = """
+                SELECT s.student_id, s.first_name, s.last_name, s.grade, s.section,
+                    ar.failed_subjects, ar.current_gpa, ar.semester
+                FROM academic_records ar
+                JOIN students s ON ar.student_id = s.id
+                WHERE ar.failed_subjects > 0 AND s.is_active = true
+            """
+            params = []
+            if grade:
+                query += " AND s.grade = %s"
+                params.append(grade)
+            if semester:
+                query += " AND ar.semester = %s"
+                params.append(semester)
+            query += " ORDER BY ar.failed_subjects DESC"
+            cur.execute(query, params)
+            return [dict(r) for r in cur.fetchall()]
+        finally:
+            conn.close()

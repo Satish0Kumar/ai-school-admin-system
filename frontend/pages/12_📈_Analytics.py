@@ -201,7 +201,8 @@ with st.sidebar:
     if st.button("🔄 Refresh All Data",
                  use_container_width=True, type="primary"):
         st.rerun()
-    if st.button("🚪 Logout", use_container_width=True):
+    # REPLACE WITH:
+    if st.button("🚪 Logout", use_container_width=True, key="analytics_logout_btn"):
         SessionManager.logout()
         st.switch_page("app.py")
 

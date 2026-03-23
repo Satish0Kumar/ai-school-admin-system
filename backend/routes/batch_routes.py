@@ -12,16 +12,18 @@ batch_bp = Blueprint('batch', __name__)
 @jwt_required()
 def run_batch_predictions():
     try:
-        data    = request.get_json() or {}
-        grade   = data.get('grade')
-        section = data.get('section')
-        result  = BatchService.run_batch_predictions(grade=grade, section=section)
+        data = request.get_json() or {}
+        filters = {
+            'grade':   data.get('grade'),
+            'section': data.get('section'),
+        }
+        result = BatchService.run_batch_predictions(filters=filters)
         if 'error' in result:
             return jsonify(result), 400
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Batch run error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
 
 
 # GET /api/batch/predictions
@@ -29,18 +31,16 @@ def run_batch_predictions():
 @jwt_required()
 def get_batch_predictions():
     try:
-        grade   = request.args.get('grade', type=int)
-        section = request.args.get('section')
-        limit   = request.args.get('limit', 100, type=int)
-        result  = BatchService.get_all_predictions(
-            grade   = grade,
-            section = section,
-            limit   = limit
-        )
+        filters = {
+            'grade':   request.args.get('grade', type=int),
+            'section': request.args.get('section'),
+            'limit':   request.args.get('limit', 100, type=int),
+        }
+        result = BatchService.get_all_predictions(filters=filters)
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Get batch predictions error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
 
 
 # GET /api/batch/summary
@@ -48,11 +48,11 @@ def get_batch_predictions():
 @jwt_required()
 def get_batch_summary():
     try:
-        result = BatchService.get_school_risk_summary()
+        result = BatchService.get_batch_summary()   # ← was get_school_risk_summary (wrong name)
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Batch summary error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
 
 
 # GET /api/batch/unpredicted
@@ -65,4 +65,4 @@ def get_unpredicted_students():
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Get unpredicted error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
