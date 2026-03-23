@@ -34,8 +34,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── Constants ─────────────────────────────────────────────────────────────────
+MAX_ATTEMPTS = 3
+
 # ── Initialize session ─────────────────────────────────────────────────────────
 SessionManager.initialize_session()
+
 
 # ── Initialize OTP session state ───────────────────────────────────────────────
 if 'login_step'    not in st.session_state:
