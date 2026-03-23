@@ -1,6 +1,6 @@
 # backend/routes/marks_routes.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from backend.services.marks_service import MarksService
 
@@ -15,8 +15,9 @@ def enter_marks():
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        result = MarksService.enter_marks(data)
-        if 'error' in result:
+        entered_by = get_jwt_identity()
+        result = MarksService.enter_marks(data, entered_by)
+        if result.get('status') == 'error':
             return jsonify(result), 400
         return jsonify(result), 201
     except Exception as e:
@@ -52,7 +53,7 @@ def update_marks(record_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         result = MarksService.update_marks(record_id, data)
-        if 'error' in result:
+        if result.get('status') == 'error':
             return jsonify(result), 404
         return jsonify(result), 200
     except Exception as e:
@@ -65,8 +66,8 @@ def update_marks(record_id):
 @jwt_required()
 def get_grade_marks_stats(grade):
     try:
-        semester = request.args.get('semester')
-        result   = MarksService.get_grade_stats(grade=grade, semester=semester)
+        section = request.args.get('section')
+        result  = MarksService.get_marks_stats(grade=grade, section=section)
         return jsonify(result), 200
     except Exception as e:
         print(f"❌ Get grade stats error: {e}")
@@ -79,11 +80,9 @@ def get_grade_marks_stats(grade):
 def get_failed_students():
     try:
         grade    = request.args.get('grade', type=int)
-        section  = request.args.get('section')
         semester = request.args.get('semester')
-        result   = MarksService.get_failed_students(
+        result   = MarksService.identify_failed_students(
             grade    = grade,
-            section  = section,
             semester = semester
         )
         return jsonify(result), 200
