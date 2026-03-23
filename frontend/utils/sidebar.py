@@ -12,13 +12,18 @@ def render_sidebar():
 
         st.markdown("""
         <style>
+            /* Hide Streamlit's auto-generated pages nav — always */
+            [data-testid="stSidebarNav"] {
+                display: none !important;
+            }
+            /* Mobile padding fix */
             @media (max-width: 768px) {
                 [data-testid="stSidebar"] > div:first-child {
                     padding-top: 1rem !important;
                 }
-                [data-testid="stSidebarNav"] { display: none !important; }
             }
         </style>
+
         <div style='text-align:center; padding: 10px 0 5px 0;'>
             <span style='font-size:2rem;'>🎓</span><br>
             <span style='font-weight:800; font-size:1.2rem; color:#1a202c;'>ScholarSense</span><br>
@@ -39,7 +44,7 @@ def render_sidebar():
 
 
         # ── Get user role ──────────────────────────────────────
-        user = st.session_state.get("user", {})
+        user = st.session_state.get("user") or {}
         role = user.get("role", "teacher")
 
         # ══════════════════════════════════════════════════════

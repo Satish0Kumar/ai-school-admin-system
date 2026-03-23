@@ -50,11 +50,28 @@ def get_all_users():
 
 def create_user(name, email, password, role):
     try:
-        payload = {"name": name, "email": email, "password": password, "role": role}
-        res = requests.post(f"{API_BASE}/api/users/create", json=payload, headers=get_headers(), timeout=5)
-        return res.status_code in [200, 201], res.json().get("message", "Done")
+        # Generate username from email (part before @)
+        username = email.split("@")[0].lower().replace(".", "_")
+        payload = {
+            "username":  username,
+            "email":     email,
+            "password":  password,
+            "full_name": name,      # ← was "name", API needs "full_name"
+            "role":      role
+        }
+        res = requests.post(
+            f"{API_BASE}/api/users/create",
+            json=payload,
+            headers=get_headers(),
+            timeout=5
+        )
+        data = res.json()
+        if res.status_code in [200, 201]:
+            return True, data.get("message", "User created successfully")
+        return False, data.get("error", data.get("message", "Failed to create user"))
     except Exception as e:
         return False, str(e)
+
 
 def delete_user(user_id):
     try:
@@ -135,8 +152,10 @@ with tab1:
         filtered = users
         if search:
             filtered = [u for u in filtered if
-                        search.lower() in u.get("name", "").lower() or
-                        search.lower() in u.get("email", "").lower()]
+                        search.lower() in (u.get("full_name") or u.get("name") or "").lower() or
+                        search.lower() in u.get("email", "").lower() or
+                        search.lower() in u.get("username", "").lower()]
+
         if role_filter != "All":
             filtered = [u for u in filtered if u.get("role") == role_filter]
 
@@ -178,7 +197,8 @@ with tab1:
 
                 # Confirm delete
                 if st.session_state.get(f"confirm_delete_{uid}"):
-                    st.warning(f"⚠️ Are you sure you want to delete **{user.get('name')}**?")
+                    display_name = user.get('full_name') or user.get('name') or user.get('username') or 'this user'
+                    st.warning(f"⚠️ Are you sure you want to delete **{display_name}**?")
                     y, n = st.columns(2)
                     if y.button("✅ Yes, Delete", key=f"yes_{uid}"):
                         ok, msg = delete_user(uid)

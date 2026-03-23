@@ -278,9 +278,11 @@ if students:
             col0, col1, col2, col3, col4, col5 = st.columns([0.5, 3, 2, 2, 2, 1])
             with col0:
                 checked = st.checkbox(
-                    "", key=f"chk_{student['id']}",
-                    value=student['id'] in st.session_state['selected_students']
+                    "Select",
+                    key=f"bulk_{s['id']}",
+                    label_visibility="hidden"  # visually hidden but accessible
                 )
+
                 if checked:
                     st.session_state['selected_students'].add(student['id'])
                 else:

@@ -18,13 +18,21 @@ import streamlit as st
 from frontend.utils.session_manager import SessionManager
 from frontend.utils.api_client import APIClient
 
-# ── Page configuration ─────────────────────────────────────────────────────────
 st.set_page_config(
     page_title = "ScholarSense - Login",
     page_icon  = "🎓",
     layout     = "centered",
     initial_sidebar_state = "collapsed"
 )
+
+# ── Hide Streamlit's default auto-generated nav ────────────────────────────────
+st.markdown("""
+<style>
+    [data-testid="stSidebarNav"] {
+        display: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ── Initialize session ─────────────────────────────────────────────────────────
 SessionManager.initialize_session()

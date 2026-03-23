@@ -62,7 +62,13 @@ def generate_student_report(details: dict) -> str:
                     padding:4px 12px; border-radius:20px;
                     font-weight:700;">{risk_label}</span></td>
                 <th>Confidence</th>
-                <td>{pred.get('confidence_score', 0):.1f}%</td></tr>
+                <td>{float(pred.get('confidence_score') or 0):.1f}%</td></tr>
+            <tr><th>Prob. Low</th><td>{float(pred.get('probability_low') or 0):.1f}%</td>
+                <th>Prob. Medium</th><td>{float(pred.get('probability_medium') or 0):.1f}%</td></tr>
+            <tr><th>Prob. High</th><td>{float(pred.get('probability_high') or 0):.1f}%</td>
+                <th>Prob. Critical</th><td>{float(pred.get('probability_critical') or 0):.1f}%</td></tr>
+        </table>
+
             <tr><th>Prob. Low</th><td>{pred.get('probability_low', 0):.1f}%</td>
                 <th>Prob. Medium</th><td>{pred.get('probability_medium', 0):.1f}%</td></tr>
             <tr><th>Prob. High</th><td>{pred.get('probability_high', 0):.1f}%</td>
