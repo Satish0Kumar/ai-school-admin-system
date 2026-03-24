@@ -1,6 +1,6 @@
 # backend/routes/marks_routes.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 from backend.services.marks_service import MarksService
 
@@ -12,6 +12,10 @@ marks_bp = Blueprint('marks', __name__)
 @jwt_required()
 def enter_marks():
     try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -48,6 +52,10 @@ def get_class_marks(grade, section):
 @jwt_required()
 def update_marks(record_id):
     try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+
         data   = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400

@@ -89,26 +89,36 @@ class StudentService:
             db.close()
     
     @staticmethod
-    def get_all_students(grade: int = None, section: str = None, is_active: bool = True):
+    def get_all_students_paginated(grade: int = None, section: str = None, page: int = 1, per_page: int = 50):
         """
-        Get all students with optional filters
+        Get all students with optional filters and pagination
         Args:
             grade: Filter by grade (6-10)
             section: Filter by section
-            is_active: Show only active students
+            page: Page number (1-based)
+            per_page: Number of students per page
+        Returns: (students_list, total_count)
         """
         db = next(get_db())
         try:
-            query = db.query(Student).filter(Student.is_active == is_active)
-            
+            # Build base query
+            query = db.query(Student).filter(Student.is_active == True)
+
             if grade:
                 query = query.filter(Student.grade == grade)
-            
+
             if section:
                 query = query.filter(Student.section == section)
-            
-            students = query.order_by(Student.grade, Student.section, Student.last_name).all()
-            return [student.to_dict() for student in students]
+
+            # Get total count
+            total = query.count()
+
+            # Apply pagination and ordering
+            students = query.order_by(
+                Student.grade, Student.section, Student.last_name
+            ).offset((page - 1) * per_page).limit(per_page).all()
+
+            return [student.to_dict() for student in students], total
         finally:
             db.close()
     

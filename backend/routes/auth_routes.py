@@ -1,6 +1,7 @@
 # backend/routes/auth_routes.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, get_jwt
+from datetime import timedelta
 
 from backend.auth.auth_service import AuthService
 from backend.services.otp_service import OtpService
@@ -193,4 +194,37 @@ def get_current_user_info():
         return jsonify({'error': 'User not found'}), 404
     except Exception as e:
         print(f"❌ Get user error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+# ============================================
+# POST /api/auth/refresh
+# ============================================
+@auth_bp.route('/api/auth/refresh', methods=['POST'])
+@jwt_required()
+def refresh_token():
+    try:
+        # Get current user identity and claims
+        user_id = get_jwt_identity()
+        claims = get_jwt()
+
+        # Generate new access token with same claims
+        new_access_token = create_access_token(
+            identity=user_id,
+            additional_claims={
+                'role': claims.get('role'),
+                'email': claims.get('email'),
+                'name': claims.get('name')
+            },
+            expires_delta=timedelta(hours=8)  # Same expiration as login
+        )
+
+        print(f"🔄 Token refreshed for user {user_id}")
+        return jsonify({
+            'access_token': new_access_token,
+            'message': 'Token refreshed successfully'
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Token refresh error: {e}")
         return jsonify({'error': 'Internal server error'}), 500

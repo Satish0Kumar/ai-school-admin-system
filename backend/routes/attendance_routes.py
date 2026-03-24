@@ -1,6 +1,6 @@
 # backend/routes/attendance_routes.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from datetime import datetime
 
 from backend.services.attendance_service import AttendanceService
@@ -13,6 +13,10 @@ attendance_bp = Blueprint('attendance', __name__)
 @jwt_required()
 def mark_attendance():
     try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+
         data = request.get_json()
         required = ['student_id', 'date', 'status']
         if not all(field in data for field in required):

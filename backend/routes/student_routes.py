@@ -12,16 +12,42 @@ student_bp = Blueprint('students', __name__)
 @jwt_required()
 def get_students():
     try:
-        grade   = request.args.get('grade', type=int)
+        grade = request.args.get('grade', type=int)
         section = request.args.get('section')
-        search  = request.args.get('search')
+        search = request.args.get('search')
+
+        # Pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if per_page < 1 or per_page > 1000:
+            per_page = 50
 
         if search:
             students = StudentService.search_students(search)
+            # Apply pagination to search results
+            total = len(students)
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated_students = students[start:end]
         else:
-            students = StudentService.get_all_students(grade=grade, section=section)
+            students, total = StudentService.get_all_students_paginated(
+                grade=grade, section=section, page=page, per_page=per_page
+            )
+            paginated_students = students
 
-        return jsonify(students), 200
+        return jsonify({
+            'students': paginated_students,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'pages': (total + per_page - 1) // per_page  # Ceiling division
+            }
+        }), 200
     except Exception as e:
         print(f"❌ Get students error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
