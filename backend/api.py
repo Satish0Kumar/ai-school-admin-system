@@ -46,7 +46,9 @@ print(f"   Token Expiry: {app.config['JWT_ACCESS_TOKEN_EXPIRES']} seconds")
 print(f"   Algorithm: {app.config['JWT_ALGORITHM']}\n")
 
 # ── Extensions ─────────────────────────────────────────────────────────
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Allow specific origins for security
+allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:8501').split(',')
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 jwt = JWTManager(app)
 
 # ── Register all route blueprints ──────────────────────────────────────
@@ -110,9 +112,10 @@ def print_startup_message():
     print(f"🤖 ML Model       : {'Loaded' if PredictionService.model else 'Using dummy predictions'}")
     print(f"📦 Routes         : 13 blueprint files")
     print(f"🔖 Version        : 3.0 (Refactored)")
-    print("\n🔑 Test Credentials:")
-    print("   Admin:   admin@scholarsense.com / admin123")
-    print("   Teacher: teacher@scholarsense.com / teacher123")
+    print("\n🔑 Default Accounts:")
+    print("   Admin:   admin@scholarsense.com")
+    print("   Teacher: teacher@scholarsense.com")
+    print("   (Passwords configured during setup)")
     print("=" * 70 + "\n")
 
 
@@ -120,7 +123,8 @@ if __name__ == '__main__':
     if test_connection():
         print("✅ Database connected - Starting server...")
         print_startup_message()
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+        app.run(debug=debug_mode, host='0.0.0.0', port=5000)
     else:
         print("❌ Database connection failed!")
         sys.exit(1)

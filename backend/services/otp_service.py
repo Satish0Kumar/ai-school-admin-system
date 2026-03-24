@@ -9,9 +9,11 @@ Handles:
 - Brute force protection (max 3 attempts)
 """
 
-import random
+import secrets
+import hashlib
 import string
 from datetime import datetime, timedelta
+from collections import defaultdict
 from backend.database.db_config import SessionLocal
 from backend.database.models import OtpToken, User
 
@@ -29,6 +31,13 @@ OTP_EXPIRY_MINUTES = 5      # OTP valid for 5 minutes
 MAX_OTP_ATTEMPTS   = 3      # Max wrong attempts before lockout
 LOCKOUT_MINUTES    = 15     # Lockout duration after max attempts
 
+# Rate limiting
+MAX_OTP_REQUESTS   = 3      # Max OTP requests per hour per user
+RATE_LIMIT_WINDOW  = 3600   # 1 hour in seconds
+
+# In-memory rate limiting (use Redis in production)
+otp_request_counts = defaultdict(list)
+
 
 class OtpService:
     """Handle OTP generation, sending, and verification"""
@@ -40,7 +49,64 @@ class OtpService:
         Generate a secure 6-digit OTP.
         Returns: 6-digit string e.g. '847392'
         """
-        return ''.join(random.choices(string.digits, k=6))
+        return ''.join(secrets.choice(string.digits) for _ in range(6))
+
+    # ──────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def hash_otp(otp: str) -> str:
+        """
+        Hash OTP for secure storage.
+        Uses SHA-256 with salt for additional security.
+        """
+        salt = secrets.token_hex(8)  # 16-character salt
+        hashed = hashlib.sha256(f"{salt}{otp}".encode()).hexdigest()
+        return f"{salt}:{hashed}"  # Store salt with hash
+
+    # ──────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def verify_otp_hash(stored_hash: str, entered_otp: str) -> bool:
+        """
+        Verify entered OTP against stored hash.
+        """
+        try:
+            salt, hash_value = stored_hash.split(':', 1)
+            expected_hash = hashlib.sha256(f"{salt}{entered_otp}".encode()).hexdigest()
+            return secrets.compare_digest(hash_value, expected_hash)
+        except (ValueError, TypeError):
+            return False
+
+    # ──────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def check_rate_limit(user_id: int) -> dict:
+        """
+        Check if user has exceeded OTP request rate limit.
+        Returns: {'allowed': bool, 'remaining_time': int} or {'error': str}
+        """
+        now = datetime.utcnow().timestamp()
+        user_requests = otp_request_counts[user_id]
+
+        # Remove old requests outside the window
+        user_requests[:] = [req_time for req_time in user_requests
+                           if now - req_time < RATE_LIMIT_WINDOW]
+
+        if len(user_requests) >= MAX_OTP_REQUESTS:
+            # Calculate remaining time until oldest request expires
+            oldest_request = min(user_requests)
+            remaining_time = int(RATE_LIMIT_WINDOW - (now - oldest_request))
+            return {
+                'allowed': False,
+                'remaining_time': remaining_time,
+                'message': f'Too many OTP requests. Try again in {remaining_time} seconds.'
+            }
+
+        return {'allowed': True}
+
+    # ──────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def record_otp_request(user_id: int):
+        """Record an OTP request for rate limiting."""
+        now = datetime.utcnow().timestamp()
+        otp_request_counts[user_id].append(now)
 
     # ──────────────────────────────────────────────────────────────────────────
     @staticmethod
@@ -56,6 +122,20 @@ class OtpService:
         """
         db = SessionLocal()
         try:
+            # ── Check rate limit ─────────────────────────────────────────────
+            rate_limit = OtpService.check_rate_limit(user_id)
+            if not rate_limit.get('allowed', False):
+                return {
+                    'error': rate_limit.get('message', 'Rate limit exceeded')
+                }
+
+            # ── Check for lockout ───────────────────────────────────────────
+            lockout_check = OtpService._check_lockout(db, user_id)
+            if lockout_check:
+                return {
+                    'error': lockout_check['message']
+                }
+
             # ── Invalidate any existing unused OTPs for this user ───────────
             existing_otps = db.query(OtpToken).filter(
                 OtpToken.user_id == user_id,
@@ -67,12 +147,13 @@ class OtpService:
 
             # ── Generate new OTP ────────────────────────────────────────────
             otp_code   = OtpService.generate_otp()
+            otp_hash   = OtpService.hash_otp(otp_code)
             expires_at = datetime.utcnow() + timedelta(minutes=OTP_EXPIRY_MINUTES)
 
             # ── Save to database ────────────────────────────────────────────
             otp_token = OtpToken(
                 user_id    = user_id,
-                otp_code   = otp_code,
+                otp_code   = otp_hash,  # Store hashed OTP
                 expires_at = expires_at,
                 is_used    = False,
                 attempts   = 0
@@ -80,6 +161,9 @@ class OtpService:
             db.add(otp_token)
             db.commit()
             db.refresh(otp_token)
+
+            # ── Record the request for rate limiting ───────────────────────
+            OtpService.record_otp_request(user_id)
 
             # ── Get user details for email ──────────────────────────────────
             user = db.query(User).filter(User.id == user_id).first()
@@ -147,7 +231,7 @@ class OtpService:
                 }
 
             # ── Check OTP code ──────────────────────────────────────────────
-            if otp_token.otp_code != entered_otp.strip():
+            if not OtpService.verify_otp_hash(otp_token.otp_code, entered_otp.strip()):
                 # Increment attempt counter
                 otp_token.attempts += 1
                 db.commit()

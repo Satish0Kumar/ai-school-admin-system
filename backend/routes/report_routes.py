@@ -17,7 +17,7 @@ def download_student_report(student_id):
         pdf_bytes = PDFService.generate_student_report(student_id)
         buffer    = io.BytesIO(pdf_bytes)
         buffer.seek(0)
-        filename  = f"student_{student_id}_report_{datetime.now().strftime('%Y%m%d')}.pdf"
+        filename  = f"student_{student_id}_report_{datetime.utcnow().strftime('%Y%m%d')}.pdf"
         return send_file(
             buffer,
             mimetype      = 'application/pdf',
@@ -40,7 +40,7 @@ def download_grade_report(grade):
         pdf_bytes = PDFService.generate_grade_report(grade, section=section)
         buffer    = io.BytesIO(pdf_bytes)
         buffer.seek(0)
-        filename  = f"grade_{grade}_report_{datetime.now().strftime('%Y%m%d')}.pdf"
+        filename  = f"grade_{grade}_report_{datetime.utcnow().strftime('%Y%m%d')}.pdf"
         return send_file(
             buffer,
             mimetype      = 'application/pdf',

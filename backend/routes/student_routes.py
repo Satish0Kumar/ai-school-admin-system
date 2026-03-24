@@ -73,6 +73,10 @@ def get_student_details(student_id):
 @jwt_required()
 def create_student():
     try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -97,6 +101,10 @@ def create_student():
 @jwt_required()
 def update_student(student_id):
     try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400

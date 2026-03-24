@@ -266,7 +266,7 @@ class PredictionService:
             # Save prediction to database
             prediction = RiskPrediction(
                 student_id=student_id,
-                prediction_date=datetime.now(),
+                prediction_date=datetime.utcnow(),
                 risk_level=int(risk_level),
                 risk_label=risk_label,
                 confidence_score=confidence_score,

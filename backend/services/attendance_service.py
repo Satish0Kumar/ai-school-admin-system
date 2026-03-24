@@ -43,7 +43,7 @@ class AttendanceService:
                 existing.status = status
                 existing.remarks = remarks
                 existing.marked_by = marked_by
-                existing.updated_at = datetime.now()
+                existing.updated_at = datetime.utcnow()
                 message = 'Attendance updated'
             else:
                 # Create new
@@ -117,7 +117,7 @@ class AttendanceService:
                     existing.status = status
                     existing.remarks = remarks
                     existing.marked_by = marked_by
-                    existing.updated_at = datetime.now()
+                    existing.updated_at = datetime.utcnow()
                 else:
                     attendance = Attendance(
                         student_id=student_id,
