@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state = "collapsed"
 )
 
-# ── Restore + check session ────────────────────────────────────
+# ── Initialize session (does not restore by default) ────────────
 SessionManager.initialize_session()
 
 if SessionManager.is_authenticated():

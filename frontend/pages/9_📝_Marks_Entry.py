@@ -1,4 +1,4 @@
-"""
+﻿"""
 Marks Entry Module
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 6: Marks Entry - Enter Marks, Analytics, Failed Students
@@ -184,18 +184,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard",          use_container_width=True):
+    if st.button("📊 Dashboard",          width='stretch'):
         st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students",           use_container_width=True):
+    if st.button("👥 Students",           width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
-    if st.button("🎯 Predictions",        use_container_width=True):
+    if st.button("🎯 Predictions",        width='stretch'):
         st.switch_page("pages/4_🎯_Predictions.py")
-    if st.button("📝 Incident Logging",   use_container_width=True):
+    if st.button("📝 Incident Logging",   width='stretch'):
         st.switch_page("pages/6_📝_Incident_Logging.py")
-    if st.button("🧠 Behavioral Dashboard", use_container_width=True):
+    if st.button("🧠 Behavioral Dashboard", width='stretch'):
         st.switch_page("pages/8_🧠_Behavioral_Dashboard.py")
     st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
+    if st.button("🚪 Logout", width='stretch', type="primary"):
         SessionManager.logout()
         st.switch_page("app.py")
 
@@ -377,7 +377,7 @@ with tab1:
         st.markdown("---")
         submit_btn = st.form_submit_button(
             "💾 Save Marks",
-            use_container_width=True,
+            width='stretch',
             type="primary"
         )
 
@@ -486,7 +486,7 @@ with tab2:
         st.markdown("<br/>", unsafe_allow_html=True)
         an_refresh = st.button(
             "🔄 Load Analytics",
-            use_container_width=True,
+            width='stretch',
             type="primary",
             key="an_refresh"
         )
@@ -608,12 +608,12 @@ with tab2:
                     )
 
                     fig_subj.update_layout(
-                        **get_plotly_layout("📚 Subject-wise Average Scores", height=340),
-                        margin=dict(t=50, b=40, l=50, r=20)
+                        **get_plotly_layout("📚 Subject-wise Average Scores", height=340, margin=dict(t=50, b=40, l=50, r=20))
                     )
+
                     fig_subj.update_xaxes(title='Subject', showgrid=False)
                     fig_subj.update_yaxes(title='Average Score (%)', range=[0, 110], showgrid=True)
-                    st.plotly_chart(fig_subj, use_container_width=True)
+                    st.plotly_chart(fig_subj, width='stretch')
 
             # GPA distribution donut chart
             with ch2:
@@ -642,10 +642,10 @@ with tab2:
                     )])
 
                     fig_dist.update_layout(
-                        **get_plotly_layout("🎓 GPA Distribution", height=340),
-                        margin=dict(t=50, b=20, l=10, r=10)
+                        **get_plotly_layout("🎓 GPA Distribution", height=340, margin=dict(t=50, b=20, l=10, r=10))
                     )
-                    st.plotly_chart(fig_dist, use_container_width=True)
+
+                    st.plotly_chart(fig_dist, width='stretch')
 
             st.markdown("---")
 
@@ -669,7 +669,7 @@ with tab2:
                 top5_df = pd.DataFrame(top5_rows)
                 st.dataframe(
                     top5_df,
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True
                 )
             else:
@@ -681,17 +681,11 @@ with tab2:
             st.markdown('<p class="section-header">📋 Full Class Marks</p>',
                         unsafe_allow_html=True)
 
-            # ✅ REPLACE WITH:
+            # Fetch class marks for the selected grade/section
             with st.spinner("Loading class marks..."):
-                if an_section == 'All':
-                    class_result = api_get(
-                        f"/marks/{an_grade}/All",
-                        params={"section": None}
-                    )
-                else:
-                    class_result = api_get(
-                        f"/marks/{an_grade}/{an_section}"
-                    )
+                class_result = api_get(
+                    f"/marks/{an_grade}/{an_section}"
+                )
             if class_result.get('status') == 'success':
                 class_marks = class_result['data'].get('marks', [])
 
@@ -727,7 +721,7 @@ with tab2:
                     )
                     st.dataframe(
                         styled_class,
-                        use_container_width=True,
+                        width='stretch',
                         hide_index=True
                     )
 
@@ -742,7 +736,7 @@ with tab2:
                             f"{date.today().isoformat()}.csv"
                         ),
                         mime="text/csv",
-                        use_container_width=True
+                        width='stretch'
                     )
                 else:
                     st.info("ℹ️ No marks records found.")
@@ -777,7 +771,7 @@ with tab3:
         st.markdown("<br/>", unsafe_allow_html=True)
         fail_refresh = st.button(
             "🔄 Load Failed Students",
-            use_container_width=True,
+            width='stretch',
             type="primary",
             key="fail_refresh"
         )
@@ -913,12 +907,12 @@ with tab3:
                             annotation_text="Pass Mark"
                         )
                         fig_mini.update_layout(
-                            **get_plotly_layout(height=220),
-                            margin=dict(t=20, b=20, l=30, r=20),
+                            **get_plotly_layout(height=220, margin=dict(t=20, b=20, l=30, r=20)),
                             showlegend=False
                         )
+
                         fig_mini.update_yaxes(range=[0, 110])
-                        st.plotly_chart(fig_mini, use_container_width=True)
+                        st.plotly_chart(fig_mini, width='stretch')
 
             st.markdown("---")
 
@@ -955,5 +949,6 @@ with tab3:
                     f"{date.today().isoformat()}.csv"
                 ),
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
+

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Students Management
 ScholarSense - AI-Powered Academic Intelligence System
 """
@@ -110,7 +110,7 @@ with col3:
     section_filter = st.selectbox("Section", ["All", "A", "B", "C"], key="section_filter")
 
 with col4:
-    if st.button("🔄 Reset Filters", use_container_width=True):
+    if st.button("🔄 Reset Filters", width='stretch'):
         st.rerun()
 
 # Reset page to 1 whenever filters change
@@ -144,7 +144,7 @@ with col1:
     st.markdown(f'<p class="section-header">📋 Students List ({len(students)} found)</p>', unsafe_allow_html=True)
 with col2:
     if SessionManager.is_admin():
-        if st.button("➕ Add New Student", type="primary", use_container_width=True):
+        if st.button("➕ Add New Student", type="primary", width='stretch'):
             st.session_state['show_add_form'] = True
             st.rerun()
 with col3:
@@ -176,9 +176,9 @@ if st.session_state.get('show_add_form', False):
             
             col1, col2 = st.columns([1, 4])
             with col1:
-                submit = st.form_submit_button("Create Student", type="primary", use_container_width=True)
+                submit = st.form_submit_button("Create Student", type="primary", width='stretch')
             with col2:
-                if st.form_submit_button("Cancel", use_container_width=True):
+                if st.form_submit_button("Cancel", width='stretch'):
                     st.session_state['show_add_form'] = False
                     st.rerun()
             
@@ -307,7 +307,7 @@ if students:
             st.markdown(f'<p class="student-info">{status}</p>', unsafe_allow_html=True)
 
         with col5:
-            if st.button("View", key=f"view_{student['id']}", use_container_width=True):
+            if st.button("View", key=f"view_{student['id']}", width='stretch'):
                 st.session_state['selected_student_id'] = student['id']
                 st.switch_page("pages/3_👤_Student_Profile.py")
 
@@ -318,7 +318,7 @@ if students:
     p1, p2, p3 = st.columns([1, 2, 1])
 
     with p1:
-        if st.button("⬅️ Previous", use_container_width=True,
+        if st.button("⬅️ Previous", width='stretch',
                      disabled=(page_num <= 1)):
             st.session_state['page_num'] = page_num - 1
             st.rerun()
@@ -333,7 +333,7 @@ if students:
         )
 
     with p3:
-        if st.button("Next ➡️", use_container_width=True,
+        if st.button("Next ➡️", width='stretch',
                      disabled=(page_num >= total_pages)):
             st.session_state['page_num'] = page_num + 1
             st.rerun()
@@ -344,3 +344,4 @@ else:
         subtitle = "Try adjusting the grade/section filters or search term.",
         icon     = "👥"
     )
+

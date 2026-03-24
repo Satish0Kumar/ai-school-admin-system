@@ -1,4 +1,4 @@
-"""
+﻿"""
 Risk Predictions
 ScholarSense - AI-Powered Academic Intelligence System
 """
@@ -91,7 +91,7 @@ if high_risk:
             st.markdown(f'<p style="color: #4a5568;">Confidence: {pred["confidence_score"]:.1f}%</p>', unsafe_allow_html=True)
         
         with col5:
-            if st.button("View", key=f"view_{student['id']}", use_container_width=True):
+            if st.button("View", key=f"view_{student['id']}", width='stretch'):
                 st.session_state['selected_student_id'] = student['id']
                 st.switch_page("pages/3_👤_Student_Profile.py")
         
@@ -110,7 +110,7 @@ if students:
     with col1:
         selected = st.selectbox("Select Student", list(student_options.keys()))
     with col2:
-        if st.button("🎯 Predict", type="primary", use_container_width=True):
+        if st.button("🎯 Predict", type="primary", width='stretch'):
             student_id = student_options[selected]
             with st.spinner("🤖 Making prediction with ML model..."):
                 result = APIClient.make_prediction(student_id)
@@ -188,7 +188,7 @@ if students:
                         **get_plotly_layout(height=300),
                         showlegend=False,
                     )
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                     st.success(f"✅ Prediction complete! Model: {model_version}")
                     st.balloons()
@@ -199,3 +199,4 @@ if students:
                 else:
                     st.error(f"❌ Error: {result['error']}")
                     st.info("💡 Make sure the student has academic records before making a prediction.")
+

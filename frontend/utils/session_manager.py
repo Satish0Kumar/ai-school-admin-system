@@ -2,6 +2,9 @@
 Session Management for Streamlit - ScholarSense
 Uses a local JSON file for reliable session persistence across page refreshes.
 Works perfectly for local/development Streamlit apps.
+
+By default, sessions DO NOT persist (fresh login required).
+Set ENABLE_SESSION_PERSISTENCE=true to enable session restoring.
 """
 import streamlit as st
 import json
@@ -13,9 +16,14 @@ from frontend.utils.api_client import APIClient
 # Session file stored in project root (gitignored)
 SESSION_FILE = Path(__file__).parent.parent.parent / ".streamlit_session.json"
 
+# ── Control session persistence via environment variable ──────
+ENABLE_SESSION_PERSISTENCE = os.getenv("ENABLE_SESSION_PERSISTENCE", "false").lower() == "true"
+
 
 def _read_session_file() -> dict:
-    """Read session data from file"""
+    """Read session data from file (only if persistence enabled)"""
+    if not ENABLE_SESSION_PERSISTENCE:
+        return {}  # ← Don't restore sessions by default
     try:
         if SESSION_FILE.exists():
             with open(SESSION_FILE, "r") as f:
@@ -26,7 +34,9 @@ def _read_session_file() -> dict:
 
 
 def _write_session_file(data: dict):
-    """Write session data to file"""
+    """Write session data to file (only if persistence enabled)"""
+    if not ENABLE_SESSION_PERSISTENCE:
+        return  # ← Don't save sessions by default
     try:
         with open(SESSION_FILE, "w") as f:
             json.dump(data, f)
@@ -148,3 +158,8 @@ class SessionManager:
     def is_admin():
         user = SessionManager.get_user()
         return user and user.get('role') == 'admin'
+
+    @staticmethod
+    def clear_session_cache():
+        """Clear the persistent session cache (forces fresh login next time)"""
+        _delete_session_file()

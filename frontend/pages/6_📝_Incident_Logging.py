@@ -1,4 +1,4 @@
-"""
+﻿"""
 Incident Logging Page
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 4: Behavioral Incident Management
@@ -224,7 +224,7 @@ with tab1:
         st.markdown("---")
         submitted = st.form_submit_button(
             "🚨 Submit Incident Report",
-            use_container_width=True,
+            width='stretch',
             type="primary"
         )
 
@@ -438,3 +438,4 @@ with tab2:
                                 st.success("✅ Incident updated! Refresh to see changes.")
                             else:
                                 st.error(f"❌ {upd_result.get('message')}")
+

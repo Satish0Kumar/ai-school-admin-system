@@ -1,4 +1,4 @@
-"""
+﻿"""
 Behavioral Dashboard
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 5: Behavioral Analytics Dashboard
@@ -173,16 +173,16 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard",           use_container_width=True):
+    if st.button("📊 Dashboard",           width='stretch'):
         st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students",            use_container_width=True):
+    if st.button("👥 Students",            width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
-    if st.button("🎯 Predictions",         use_container_width=True):
+    if st.button("🎯 Predictions",         width='stretch'):
         st.switch_page("pages/4_🎯_Predictions.py")
-    if st.button("📝 Incident Logging",    use_container_width=True):
+    if st.button("📝 Incident Logging",    width='stretch'):
         st.switch_page("pages/6_📝_Incident_Logging.py")
     st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
+    if st.button("🚪 Logout", width='stretch', type="primary"):
         SessionManager.logout()
         st.switch_page("app.py")
 
@@ -228,7 +228,7 @@ with st.container():
         )
     with f4:
         st.markdown("<br/>", unsafe_allow_html=True)
-        refresh_btn = st.button("🔄 Refresh", use_container_width=True)
+        refresh_btn = st.button("🔄 Refresh", width='stretch')
 
 st.markdown("---")
 
@@ -358,13 +358,14 @@ with row2_col1:
         ))
 
         fig_line.update_layout(
-            **get_plotly_layout(f"📈 Daily Incident Trend — Last {days} Days", height=320),
-            xaxis=dict(title='Date', showgrid=True, tickformat='%d %b'),
-            yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
-            hovermode='x unified',
-            margin=dict(t=50, b=40, l=50, r=20)
+            **get_plotly_layout(f"📈 Daily Incident Trend — Last {days} Days", height=320,
+                                margin=dict(t=50, b=40, l=50, r=20),
+                                xaxis=dict(title='Date', showgrid=True, tickformat='%d %b'),
+                                yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
+                                hovermode='x unified')
         )
-        st.plotly_chart(fig_line, use_container_width=True)
+
+        st.plotly_chart(fig_line, width='stretch')
     else:
         st.markdown("""
         <div style='background:#f7fafc; border:1px dashed #cbd5e0;
@@ -400,11 +401,12 @@ with row2_col2:
         )])
 
         fig_pie.update_layout(
-            **get_plotly_layout("🥧 Incidents by Type", height=320),
-            legend=dict(orientation='v', x=1.02, y=0.5, font=dict(size=10)),
-            margin=dict(t=50, b=20, l=10, r=10)
+            **get_plotly_layout("🥧 Incidents by Type", height=320,
+                                margin=dict(t=50, b=20, l=10, r=10),
+                                legend=dict(orientation='v', x=1.02, y=0.5, font=dict(size=10)))
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
+
+        st.plotly_chart(fig_pie, width='stretch')
     else:
         st.markdown("""
         <div style='background:#f7fafc; border:1px dashed #cbd5e0;
@@ -456,12 +458,13 @@ with row3_col1:
         )])
 
         fig_bar.update_layout(
-            **get_plotly_layout("⚠️ Incidents by Severity", height=320),
-            xaxis=dict(title='Severity Level', showgrid=False),
-            yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
-            margin=dict(t=50, b=40, l=50, r=20)
+            **get_plotly_layout("⚠️ Incidents by Severity", height=320,
+                                margin=dict(t=50, b=40, l=50, r=20),
+                                xaxis=dict(title='Severity Level', showgrid=False),
+                                yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'))
         )
-        st.plotly_chart(fig_bar, use_container_width=True)
+
+        st.plotly_chart(fig_bar, width='stretch')
     else:
         st.markdown("""
         <div style='background:#f7fafc; border:1px dashed #cbd5e0;
@@ -496,12 +499,13 @@ with row3_col2:
         )])
 
         fig_grade.update_layout(
-            **get_plotly_layout("🎓 Incidents by Grade", height=320),
-            xaxis=dict(title='Grade', showgrid=False),
-            yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero'),
-            margin=dict(t=50, b=40, l=50, r=20)
+            **get_plotly_layout("🎓 Incidents by Grade", height=320,
+                                margin=dict(t=50, b=40, l=50, r=20),
+                                xaxis=dict(title='Grade', showgrid=False),
+                                yaxis=dict(title='No. of Incidents', showgrid=True, rangemode='tozero')),
         )
-        st.plotly_chart(fig_grade, use_container_width=True)
+
+        st.plotly_chart(fig_grade, width='stretch')
     else:
         st.markdown("""
         <div style='background:#f7fafc; border:1px dashed #cbd5e0;
@@ -611,7 +615,7 @@ if incidents:
 
         st.dataframe(
             styled_df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
 
@@ -622,7 +626,7 @@ if incidents:
         with qa1:
             if st.button(
                 "📝 Log New Incident",
-                use_container_width=True,
+                width='stretch',
                 type="primary"
             ):
                 st.switch_page("pages/6_📝_Incident_Logging.py")
@@ -635,13 +639,13 @@ if incidents:
                 data=csv_data,
                 file_name=f"top10_incidents_{date.today().isoformat()}.csv",
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
 
         with qa3:
             if st.button(
                 "👥 View All Students",
-                use_container_width=True
+                width='stretch'
             ):
                 st.switch_page("pages/2_👥_Students.py")
 
@@ -699,3 +703,4 @@ with footer_c4:
         {type_filter}
     </div>
     """, unsafe_allow_html=True)
+

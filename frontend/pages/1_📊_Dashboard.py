@@ -1,4 +1,4 @@
-"""
+﻿"""
 Dashboard - Main Overview
 ScholarSense - AI-Powered Academic Intelligence System
 """
@@ -363,16 +363,14 @@ with col_left:
                 text='Count'
             )
             fig.update_layout(
-                **get_plotly_layout(height=350),   # ← height goes HERE
-                showlegend=False,
-                margin=dict(l=20, r=20, t=20, b=20),
-                xaxis_title="Grade",
-                yaxis_title="Number of Students",
+                **get_plotly_layout(title="", height=350, margin=dict(l=20, r=20, t=20, b=20)),
+                showlegend=True,
             )
+
             fig.update_traces(textposition='outside', marker_line_color='#1e40af', marker_line_width=1.5)
             fig.update_xaxes(showgrid=False)
             fig.update_yaxes(showgrid=True, gridcolor='#f3f4f6')
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
 with col_right:
     st.markdown('<p class="section-header">⚠️ Risk Distribution</p>', unsafe_allow_html=True)
@@ -391,11 +389,12 @@ with col_right:
         textfont=dict(color='white', size=14, family='Arial Black')
     )])
     fig.update_layout(
-        **get_plotly_layout(title="", height=350),
-        showlegend=True,
-        margin=dict(l=20, r=20, t=20, b=20),
+        **get_plotly_layout(height=350, margin=dict(l=20, r=20, t=20, b=20)),
+        showlegend=False,
+        xaxis_title="Grade",
+        yaxis_title="Number of Students",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -413,7 +412,7 @@ with col1:
             with col_b:
                 st.markdown(f'<p class="student-grade">Grade {student.get("grade", "N/A")}-{student.get("section", "N/A")}</p>', unsafe_allow_html=True)
             with col_c:
-                if st.button("View", key=f"view_{student['id']}", use_container_width=True):
+                if st.button("View", key=f"view_{student['id']}", width='stretch'):
                     st.session_state['selected_student_id'] = student['id']
                     st.switch_page("pages/3_👤_Student_Profile.py")
             st.markdown("<hr style='margin: 0.5rem 0; border-color: #e2e8f0;'>", unsafe_allow_html=True)
@@ -434,7 +433,7 @@ with col2:
             with col_b:
                 st.markdown(f'<span class="risk-badge {risk_class}">{risk_label}</span>', unsafe_allow_html=True)
             with col_c:
-                if st.button("View", key=f"risk_{student['id']}", use_container_width=True):
+                if st.button("View", key=f"risk_{student['id']}", width='stretch'):
                     st.session_state['selected_student_id'] = student['id']
                     st.switch_page("pages/3_👤_Student_Profile.py")
             st.markdown("<hr style='margin: 0.5rem 0; border-color: #e2e8f0;'>", unsafe_allow_html=True)
@@ -455,21 +454,22 @@ with actions_col:
     st.markdown('<p class="section-header">⚡ Quick Actions</p>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
-    if st.button("➕ Add New Student", use_container_width=True, type="primary"):
+    if st.button("➕ Add New Student", width='stretch', type="primary"):
         st.switch_page("pages/2_👥_Students.py")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("📋 View All Students", use_container_width=True):
+    if st.button("📋 View All Students", width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🎯 Make Prediction", use_container_width=True):
+    if st.button("🎯 Make Prediction", width='stretch'):
         st.switch_page("pages/4_🎯_Predictions.py")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("📝 Log Incident", use_container_width=True):
+    if st.button("📝 Log Incident", width='stretch'):
         st.switch_page("pages/6_📝_Incident_Logging.py")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔁 Batch Analysis", use_container_width=True):
+    if st.button("🔁 Batch Analysis", width='stretch'):
         st.switch_page("pages/10_🔁_Batch_Analysis.py")
+

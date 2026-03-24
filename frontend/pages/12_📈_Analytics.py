@@ -1,4 +1,4 @@
-"""
+﻿"""
 Advanced Analytics Dashboard
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 10: School-wide executive analytics & insights
@@ -178,15 +178,15 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard",          use_container_width=True):
+    if st.button("📊 Dashboard",          width='stretch'):
         st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students",           use_container_width=True):
+    if st.button("👥 Students",           width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
-    if st.button("🔁 Batch Analysis",     use_container_width=True):
+    if st.button("🔁 Batch Analysis",     width='stretch'):
         st.switch_page("pages/10_🔁_Batch_Analysis.py")
-    if st.button("📧 Parent Portal",      use_container_width=True):
+    if st.button("📧 Parent Portal",      width='stretch'):
         st.switch_page("pages/11_📧_Parent_Portal.py")
-    if st.button("📝 Marks Entry",        use_container_width=True):
+    if st.button("📝 Marks Entry",        width='stretch'):
         st.switch_page("pages/9_📝_Marks_Entry.py")
     st.markdown("---")
 
@@ -200,10 +200,10 @@ with st.sidebar:
 
     st.markdown("---")
     if st.button("🔄 Refresh All Data",
-                 use_container_width=True, type="primary"):
+                 width='stretch', type="primary"):
         st.rerun()
     # REPLACE WITH:
-    if st.button("🚪 Logout", use_container_width=True, key="analytics_logout_btn"):
+    if st.button("🚪 Logout", width='stretch', key="analytics_logout_btn"):
         SessionManager.logout()
         st.switch_page("app.py")
 
@@ -468,12 +468,10 @@ with tab1:
                 )
             )])
             fig_risk.update_layout(
-                **get_plotly_layout("🎯 Risk Distribution", height=300),
-                margin=dict(t=45, b=10, l=10, r=10),
-                showlegend=True,
-                legend=dict(orientation='h', x=0.1, y=-0.15, font=dict(size=10))
+                **get_plotly_layout("🎯 Risk Distribution", height=300, margin=dict(t=45, b=10, l=10, r=10), legend=dict(orientation='h', x=0.1, y=-0.15, font=dict(size=10))),
+                showlegend=True
             )
-            st.plotly_chart(fig_risk, use_container_width=True)
+            st.plotly_chart(fig_risk, width='stretch')
         else:
             st.info("ℹ️ No risk predictions yet.")
 
@@ -492,13 +490,10 @@ with tab1:
                 width=0.5
             )])
             fig_grade_count.update_layout(
-                **get_plotly_layout("👥 Students per Grade", height=300),
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, rangemode='tozero'),
-                margin=dict(t=45, b=40, l=40, r=20),
+                **get_plotly_layout("👥 Students per Grade", height=300, margin=dict(t=45, b=40, l=40, r=20), xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, rangemode='tozero')),
                 showlegend=False
             )
-            st.plotly_chart(fig_grade_count, use_container_width=True)
+            st.plotly_chart(fig_grade_count, width='stretch')
 
     # Module activity donut
     with rc3:
@@ -527,12 +522,10 @@ with tab1:
             )
         )])
         fig_act.update_layout(
-            **get_plotly_layout("🔢 Module Activity", height=300),
-            margin=dict(t=45, b=10, l=10, r=10),
-            showlegend=True,
-            legend=dict(orientation='h', x=0.0, y=-0.15, font=dict(size=10))
+            **get_plotly_layout("🔢 Module Activity", height=300, margin=dict(t=45, b=10, l=10, r=10), legend=dict(orientation='h', x=0.0, y=-0.15, font=dict(size=10))),
+            showlegend=True
         )
-        st.plotly_chart(fig_act, use_container_width=True)
+        st.plotly_chart(fig_act, width='stretch')
 
 
 # ============================================================
@@ -595,12 +588,9 @@ with tab2:
                 annotation_position="top right"
             )
             fig_gpa.update_layout(
-                **get_plotly_layout("📊 Grade-wise Average GPA", height=360),
-                xaxis=dict(showgrid=False),
-                yaxis=dict(title='Average GPA (%)', range=[0, 110], showgrid=True),
-                margin=dict(t=50, b=40, l=50, r=20)
+                **get_plotly_layout("📊 Grade-wise Average GPA", height=360, margin=dict(t=50, b=40, l=50, r=20), xaxis=dict(showgrid=False), yaxis=dict(title='Average GPA (%)', range=[0, 110], showgrid=True))
             )
-            st.plotly_chart(fig_gpa, use_container_width=True)
+            st.plotly_chart(fig_gpa, width='stretch')
 
         # GPA min/max/avg range chart
         with ga2:
@@ -641,13 +631,9 @@ with tab2:
                 ))
 
                 fig_range.update_layout(
-                    **get_plotly_layout("📉 GPA Range (Min / Avg / Max)", height=360),
-                    xaxis=dict(title='Grade', showgrid=False),
-                    yaxis=dict(title='GPA (%)', range=[0, 105], showgrid=True),
-                    legend=dict(orientation='h', x=0, y=-0.2),
-                    margin=dict(t=50, b=50, l=50, r=20)
+                    **get_plotly_layout("📉 GPA Range (Min / Avg / Max)", height=360, margin=dict(t=50, b=50, l=50, r=20), legend=dict(orientation='h', x=0, y=-0.2), xaxis=dict(title='Grade', showgrid=False), yaxis=dict(title='GPA (%)', range=[0, 105], showgrid=True))
                 )
-                st.plotly_chart(fig_range, use_container_width=True)
+                st.plotly_chart(fig_range, width='stretch')
 
         st.markdown("---")
 
@@ -728,11 +714,9 @@ with tab2:
                     zmax=100
                 ))
                 fig_heatmap.update_layout(
-                    **get_plotly_layout("🔥 GPA Heatmap (Grade × Section)", height=350),
-                    xaxis=dict(side='bottom'),
-                    margin=dict(t=50, b=40, l=70, r=20)
+                    **get_plotly_layout("🔥 GPA Heatmap (Grade × Section)", height=350, margin=dict(t=50, b=40, l=70, r=20), xaxis=dict(side='bottom'))
                 )
-                st.plotly_chart(fig_heatmap, use_container_width=True)
+                st.plotly_chart(fig_heatmap, width='stretch')
 
             with hm2:
                 # Grade stats summary table
@@ -754,7 +738,7 @@ with tab2:
                 sum_df = pd.DataFrame(sum_rows)
                 st.dataframe(
                     sum_df,
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True,
                     height=280
                 )
@@ -899,10 +883,9 @@ with tab3:
                 )
             ))
             fig_funnel.update_layout(
-                **get_plotly_layout("📉 Dropout Risk Funnel", height=380),
-                margin=dict(t=50, b=20, l=120, r=40)
+                **get_plotly_layout("📉 Dropout Risk Funnel", height=380, margin=dict(t=50, b=20, l=120, r=40))
             )
-            st.plotly_chart(fig_funnel, use_container_width=True)
+            st.plotly_chart(fig_funnel, width='stretch')
         else:
             st.info(
                 "ℹ️ No risk data yet. "
@@ -929,12 +912,9 @@ with tab3:
                 )
             )])
             fig_conf.update_layout(
-                **get_plotly_layout("🎯 ML Confidence Distribution", height=380),
-                xaxis=dict(title='Confidence Band', showgrid=False),
-                yaxis=dict(title='Number of Students', showgrid=True, rangemode='tozero'),
-                margin=dict(t=50, b=50, l=50, r=20)
+                **get_plotly_layout("🎯 ML Confidence Distribution", height=380, margin=dict(t=50, b=50, l=50, r=20), xaxis=dict(title='Confidence Band', showgrid=False), yaxis=dict(title='Number of Students', showgrid=True, rangemode='tozero'))
             )
-            st.plotly_chart(fig_conf, use_container_width=True)
+            st.plotly_chart(fig_conf, width='stretch')
 
             # Confidence insight
             high_conf = conf_dist.get('90-100%', 0)
@@ -1010,14 +990,10 @@ with tab3:
                 ))
 
             fig_stacked.update_layout(
-                **get_plotly_layout("📊 Risk Breakdown by Grade", height=360),
-                barmode='stack',
-                xaxis=dict(showgrid=False),
-                yaxis=dict(title='Students', showgrid=True),
-                legend=dict(orientation='h', x=0, y=-0.25),
-                margin=dict(t=50, b=60, l=50, r=20)
+                **get_plotly_layout("📊 Risk Breakdown by Grade", height=360, margin=dict(t=50, b=60, l=50, r=20), legend=dict(orientation='h', x=0, y=-0.25), xaxis=dict(showgrid=False), yaxis=dict(title='Students', showgrid=True)),
+                barmode='stack'
             )
-            st.plotly_chart(fig_stacked, use_container_width=True)
+            st.plotly_chart(fig_stacked, width='stretch')
 
         with gb2:
             st.markdown("**🔢 Grade Risk Table**")
@@ -1038,7 +1014,7 @@ with tab3:
             gr_df = pd.DataFrame(grade_risk_rows)
             st.dataframe(
                 gr_df,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=280
             )
@@ -1096,13 +1072,10 @@ with tab4:
                 )
             ))
             fig_inc.update_layout(
-                **get_plotly_layout("🧠 Behavioral Incidents per Month", height=320),
-                xaxis=dict(title='Month', showgrid=False),
-                yaxis=dict(title='Incident Count', showgrid=True, rangemode='tozero'),
-                margin=dict(t=50, b=50, l=50, r=20),
+                **get_plotly_layout("🧠 Behavioral Incidents per Month", height=320, margin=dict(t=50, b=50, l=50, r=20), xaxis=dict(title='Month', showgrid=False), yaxis=dict(title='Incident Count', showgrid=True, rangemode='tozero')),
                 showlegend=False
             )
-            st.plotly_chart(fig_inc, use_container_width=True)
+            st.plotly_chart(fig_inc, width='stretch')
         else:
             st.info(
                 "ℹ️ No incident trend data yet. "
@@ -1134,13 +1107,10 @@ with tab4:
                 )
             ))
             fig_comm.update_layout(
-                **get_plotly_layout("📧 Parent Emails Sent per Month", height=320),
-                xaxis=dict(title='Month', showgrid=False),
-                yaxis=dict(title='Emails Sent', showgrid=True, rangemode='tozero'),
-                margin=dict(t=50, b=50, l=50, r=20),
+                **get_plotly_layout("📧 Parent Emails Sent per Month", height=320, margin=dict(t=50, b=50, l=50, r=20), xaxis=dict(title='Month', showgrid=False), yaxis=dict(title='Emails Sent', showgrid=True, rangemode='tozero')),
                 showlegend=False
             )
-            st.plotly_chart(fig_comm, use_container_width=True)
+            st.plotly_chart(fig_comm, width='stretch')
         else:
             st.info(
                 "ℹ️ No email trend data yet. "
@@ -1185,7 +1155,7 @@ with tab4:
             top_df = pd.DataFrame(top_rows)
             st.dataframe(
                 top_df,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=300
             )
@@ -1218,12 +1188,9 @@ with tab4:
                     )
                 )])
                 fig_ctype.update_layout(
-                    **get_plotly_layout(height=300),
-                    xaxis=dict(title='Emails Sent', showgrid=True, rangemode='tozero'),
-                    yaxis=dict(showgrid=False),
-                    margin=dict(t=10, b=40, l=140, r=40)
+                    **get_plotly_layout(height=300, margin=dict(t=10, b=40, l=140, r=40), xaxis=dict(title='Emails Sent', showgrid=True, rangemode='tozero'), yaxis=dict(showgrid=False))
                 )
-                st.plotly_chart(fig_ctype, use_container_width=True)
+                st.plotly_chart(fig_ctype, width='stretch')
             else:
                 st.info("ℹ️ No emails sent yet.")
 
@@ -1279,7 +1246,7 @@ with tab4:
                 f"{datetime.now().strftime('%Y%m%d')}.csv"
             ),
             mime="text/csv",
-            use_container_width=True,
+            width='stretch',
             type="primary"
         )
 
@@ -1318,7 +1285,7 @@ with tab4:
                     f"{datetime.now().strftime('%Y%m%d')}.csv"
                 ),
                 mime="text/csv",
-                use_container_width=True,
+                width='stretch',
                 type="primary"
             )
 
@@ -1338,7 +1305,7 @@ with tab4:
                     f"{datetime.now().strftime('%Y%m%d')}.csv"
                 ),
                 mime="text/csv",
-                use_container_width=True,
+                width='stretch',
                 type="primary"
             )
 
@@ -1367,3 +1334,4 @@ with tab4:
         </p>
     </div>
     """, unsafe_allow_html=True)
+

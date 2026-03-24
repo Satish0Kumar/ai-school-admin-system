@@ -1,4 +1,4 @@
-"""
+﻿"""
 Parent Communication Portal
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 9: Send emails, view history, manage templates
@@ -250,18 +250,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard",            use_container_width=True):
+    if st.button("📊 Dashboard",            width='stretch'):
         st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students",             use_container_width=True):
+    if st.button("👥 Students",             width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
-    if st.button("🔁 Batch Analysis",       use_container_width=True):
+    if st.button("🔁 Batch Analysis",       width='stretch'):
         st.switch_page("pages/10_🔁_Batch_Analysis.py")
-    if st.button("📝 Incident Logging",     use_container_width=True):
+    if st.button("📝 Incident Logging",     width='stretch'):
         st.switch_page("pages/6_📝_Incident_Logging.py")
-    if st.button("📝 Marks Entry",          use_container_width=True):
+    if st.button("📝 Marks Entry",          width='stretch'):
         st.switch_page("pages/9_📝_Marks_Entry.py")
     st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
+    if st.button("🚪 Logout", width='stretch', type="primary"):
         SessionManager.logout()
         st.switch_page("app.py")
 
@@ -502,7 +502,7 @@ with tab1:
             if can_send:
                 send_btn = st.button(
                     f"📤 Send Email to {parent_email}",
-                    use_container_width=True,
+                    width='stretch',
                     type="primary"
                 )
 
@@ -588,7 +588,7 @@ with tab1:
                 })
 
             risk_df = pd.DataFrame(risk_rows)
-            st.dataframe(risk_df, use_container_width=True, hide_index=True)
+            st.dataframe(risk_df, width='stretch', hide_index=True)
 
             st.markdown("---")
 
@@ -620,7 +620,7 @@ with tab1:
 
             batch_btn = st.button(
                 f"🚀 Send {batch_comm_type} to All {len(at_risk)} At-Risk Parents",
-                use_container_width=True,
+                width='stretch',
                 type="primary"
             )
 
@@ -672,7 +672,7 @@ with tab1:
 
                         st.dataframe(
                             results_df,
-                            use_container_width=True,
+                            width='stretch',
                             hide_index=True
                         )
                     else:
@@ -716,7 +716,7 @@ with tab2:
         st.markdown("<br/>", unsafe_allow_html=True)
         h_refresh = st.button(
             "🔄 Refresh",
-            use_container_width=True,
+            width='stretch',
             key="h_refresh"
         )
     with hf5:
@@ -830,12 +830,12 @@ with tab2:
                     else:
                         return 'color:#FFA500; font-weight:600;'
 
-                styled_hist = history_df.style.applymap(
+                styled_hist = history_df.style.map(
                     style_status, subset=['Status']
                 )
                 st.dataframe(
                     styled_hist,
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True
                 )
 
@@ -941,7 +941,7 @@ with tab2:
                         f"{datetime.now().strftime('%Y%m%d')}.csv"
                     ),
                     mime="text/csv",
-                    use_container_width=True
+                    width='stretch'
                 )
 
 
@@ -1063,22 +1063,13 @@ with tab3:
                         'Times Used: %{y}<extra></extra>'
                     )
                 )])
-                fig_usage.update_layout(**get_plotly_layout(), 
-                    title="📧 Emails Sent per Template Type",
-                    height=320,
-                    xaxis=dict(
-                        title='Template', showgrid=False,
-                        tickangle=-20
-                    ),
-                    yaxis=dict(
-                        title='Count',
-                        showgrid=True,
-                        gridcolor='#f0f0f0',
-                        rangemode='tozero'
-                    ),
-                    margin=dict(t=50, b=60, l=50, r=20)
+                fig_usage.update_layout(
+                    **get_plotly_layout(height=320, margin=dict(t=50, b=60, l=50, r=20),
+                                       title="📧 Emails Sent per Template Type",
+                                       xaxis=dict(title='Template', showgrid=False, tickangle=-20),
+                                       yaxis=dict(title='Count', showgrid=True, gridcolor='#f0f0f0', rangemode='tozero'))
                 )
-                st.plotly_chart(fig_usage, use_container_width=True)
+                st.plotly_chart(fig_usage, width='stretch')
             else:
                 st.info(
                     "ℹ️ No emails sent yet. "
@@ -1106,3 +1097,4 @@ with tab3:
             </ul>
         </div>
         """, unsafe_allow_html=True)
+

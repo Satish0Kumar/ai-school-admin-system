@@ -1,4 +1,4 @@
-"""
+﻿"""
 Attendance Management
 ScholarSense - AI-Powered Academic Intelligence System
 """
@@ -142,7 +142,7 @@ with tab1:
             st.markdown("<hr style='margin: 0.5rem 0; border-color: #e2e8f0;'>", unsafe_allow_html=True)
         
         # Save button
-        if st.button("💾 Save Attendance", type="primary", use_container_width=True):
+        if st.button("💾 Save Attendance", type="primary", width='stretch'):
             with st.spinner("Saving attendance..."):
                 result = APIClient.mark_bulk_attendance(attendance_data)
                 
@@ -209,7 +209,7 @@ with tab2:
                 df.columns = ['Date', 'Status', 'Remarks']
                 
                 # Display table
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width='stretch', hide_index=True)
             else:
                 st.info("No attendance records found for this period")
         else:
@@ -256,10 +256,11 @@ with tab3:
                     st.markdown(f"Absent: {stats['absent']}")
                 
                 with col5:
-                    if st.button("View", key=f"view_low_{student['id']}", use_container_width=True):
+                    if st.button("View", key=f"view_low_{student['id']}", width='stretch'):
                         st.session_state['selected_student_id'] = student['id']
                         st.switch_page("pages/3_👤_Student_Profile.py")
                 
                 st.markdown("<hr style='margin: 0.5rem 0; border-color: #e2e8f0;'>", unsafe_allow_html=True)
     else:
         st.success(f"✅ All students have attendance above {threshold}%! Excellent! 🎉")
+

@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
@@ -181,7 +181,7 @@ with tab1:
 
                 # Deactivate / Activate button
                 btn_label = "🔴 Deactivate" if active else "🟢 Activate"
-                if c4.button(btn_label, key=f"toggle_{uid}", use_container_width=True):
+                if c4.button(btn_label, key=f"toggle_{uid}", width='stretch'):
                     ok, msg = toggle_user_status(uid, active)
                     if ok:
                         st.success(f"✅ {msg}")
@@ -192,7 +192,7 @@ with tab1:
                 # Delete button — prevent self-delete
                 current_user_id = st.session_state.get("user_id")
                 if uid != current_user_id:
-                    if c5.button("🗑️ Delete", key=f"del_{uid}", use_container_width=True):
+                    if c5.button("🗑️ Delete", key=f"del_{uid}", width='stretch'):
                         st.session_state[f"confirm_delete_{uid}"] = True
 
                 # Confirm delete
@@ -231,7 +231,7 @@ with tab2:
         st.markdown("**Permissions for Teacher role:**")
         st.markdown("✅ View Students &nbsp;&nbsp; ✅ Add Marks &nbsp;&nbsp; ✅ Log Incidents &nbsp;&nbsp; ✅ View Reports &nbsp;&nbsp; ❌ Manage Users")
 
-        submitted = st.form_submit_button("➕ Create Teacher Account", use_container_width=True, type="primary")
+        submitted = st.form_submit_button("➕ Create Teacher Account", width='stretch', type="primary")
 
         if submitted:
             if not t_name or not t_email or not t_pass:
@@ -273,7 +273,7 @@ with tab3:
         st.markdown("✅ View Students &nbsp;&nbsp; ✅ Add Marks &nbsp;&nbsp; ✅ Log Incidents &nbsp;&nbsp; ✅ View Reports &nbsp;&nbsp; ✅ Manage Users &nbsp;&nbsp; ✅ Full Access")
 
         confirm = st.checkbox("✅ I confirm creating a new Admin account")
-        submitted_a = st.form_submit_button("🔑 Create Admin Account", use_container_width=True, type="primary")
+        submitted_a = st.form_submit_button("🔑 Create Admin Account", width='stretch', type="primary")
 
         if submitted_a:
             if not confirm:
@@ -294,3 +294,4 @@ with tab3:
                     st.balloons()
                 else:
                     st.error(f"❌ {msg}")
+

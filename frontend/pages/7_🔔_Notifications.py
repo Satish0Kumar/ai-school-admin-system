@@ -1,4 +1,4 @@
-"""
+﻿"""
 Notifications Page - Parent Alert System
 ScholarSense - AI-Powered Academic Intelligence System
 
@@ -299,7 +299,7 @@ with st.container():
         send_clicked = st.button(
             "📨 Send Notifications",
             type               = "primary",
-            use_container_width = True,
+            width             = 'stretch',
             key                = "send_notif_btn"
         )
 
@@ -413,7 +413,7 @@ with st.expander("📮 Send custom message to a specific student's parent",
         send_manual = st.button(
             "📨 Send Manual Notification",
             type               = "primary",
-            use_container_width = True,
+            width             = 'stretch',
             key                = "send_manual_btn"
         )
 
@@ -469,7 +469,7 @@ with col_filter2:
 with col_refresh:
     st.write("")
     st.write("")
-    if st.button("🔄 Refresh", use_container_width=True):
+    if st.button("🔄 Refresh", width='stretch'):
         st.rerun()
 
 # ── Fetch notifications ────────────────────────────────────────────────────────
@@ -579,3 +579,4 @@ else:
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+

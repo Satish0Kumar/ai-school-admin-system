@@ -1,4 +1,4 @@
-"""
+﻿"""
 Student Profile - Detailed View
 ScholarSense - AI-Powered Academic Intelligence System
 """
@@ -151,7 +151,7 @@ with col1:
         f"**Grade:** {details['grade']}-{details['section']}"
     )
 with col2:
-    if st.button("← Back to Students", use_container_width=True):
+    if st.button("← Back to Students", width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
 with col3:
     from frontend.utils.report_generator import generate_student_report
@@ -162,7 +162,7 @@ with col3:
         data=report_html,
         file_name=f"report_{details['student_id']}.html",
         mime="text/html",
-        use_container_width=True
+        width='stretch'
     )
     # log only when button clicked — Streamlit handles this automatically
 
@@ -248,7 +248,7 @@ with tab1:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("🎯 Make New Prediction", type="primary", use_container_width=True):
+        if st.button("🎯 Make New Prediction", type="primary", width='stretch'):
             with st.spinner("Making prediction..."):
                 result = APIClient.make_prediction(student_id)
                 if 'error' not in result:
@@ -265,11 +265,11 @@ with tab1:
                     st.error(f"❌ {result['error']}")
 
     with col2:
-        if st.button("📝 Add Academic Record", use_container_width=True):
+        if st.button("📝 Add Academic Record", width='stretch'):
             st.session_state['show_academic_form'] = True
 
     with col3:
-        if st.button("🚨 Log Incident", use_container_width=True):
+        if st.button("🚨 Log Incident", width='stretch'):
             st.switch_page("pages/6_📝_Incident_Logging.py")
     # ── Academic Record Form ──────────────────────────────────
     if st.session_state.get('show_academic_form'):
@@ -313,12 +313,12 @@ with tab1:
                 submit = st.form_submit_button(
                     "💾 Save Academic Record",
                     type="primary",
-                    use_container_width=True
+                    width='stretch'
                 )
             with fc2:
                 cancel = st.form_submit_button(
                     "✖ Cancel",
-                    use_container_width=True
+                    width='stretch'
                 )
 
         if cancel:
@@ -443,7 +443,7 @@ with tab2:
                 **get_plotly_layout("Subject-wise Performance", height=350),
                 yaxis_title="Score (%)",
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         # All academic records history
         if len(details['academic_records']) > 1:
@@ -458,7 +458,7 @@ with tab2:
                 }
                 for r in details['academic_records']
             ])
-            st.dataframe(history_df, use_container_width=True)
+            st.dataframe(history_df, width='stretch')
     else:
         st.info("📭 No academic records found")
         if st.button("➕ Add Academic Record", type="primary"):
@@ -512,7 +512,7 @@ with tab3:
                 **get_plotly_layout("Risk Probability Distribution", height=300),
                 yaxis_title="Probability (%)",
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         # Re-predict button
         st.markdown("---")
@@ -560,12 +560,12 @@ with tab4:
         )
     with ctrl2:
         st.markdown("<br/>", unsafe_allow_html=True)
-        if st.button("🔄 Refresh", use_container_width=True):
+        if st.button("🔄 Refresh", width='stretch'):
             st.rerun()
     with ctrl3:
         st.markdown("<br/>", unsafe_allow_html=True)
         if st.button("🚨 Log New Incident for This Student",
-                     use_container_width=True, type="primary"):
+                     width='stretch', type="primary"):
             # Pre-select student and redirect
             st.switch_page("pages/6_📝_Incident_Logging.py")
 
@@ -610,10 +610,9 @@ with tab4:
                     hole=0.4
                 )])
                 fig_sev.update_layout(
-                    **get_plotly_layout("Incidents by Severity", height=250),
-                    margin=dict(t=40, b=10, l=10, r=10),
+                    **get_plotly_layout("Incidents by Severity", height=250, margin=dict(t=40, b=10, l=10, r=10))
                 )
-                st.plotly_chart(fig_sev, use_container_width=True)
+                st.plotly_chart(fig_sev, width='stretch')
                 st.markdown("---")
 
             # Incident cards
@@ -688,7 +687,7 @@ with tab4:
                             save_btn = st.form_submit_button(
                                 "💾 Save Changes",
                                 type="primary",
-                                use_container_width=True
+                                width='stretch'
                             )
 
                         if save_btn:
@@ -705,3 +704,4 @@ with tab4:
                                 st.success("✅ Updated! Refresh to see changes.")
                             else:
                                 st.error(f"❌ {upd_res.get('message', 'Update failed')}")
+

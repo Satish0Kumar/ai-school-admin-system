@@ -778,15 +778,16 @@ def get_plotly_layout(title="", height=400, **kwargs):
     grid_color = "#2d3748" if is_dark else "#f0f0f0"
 
     layout = {
-        "title":        dict(text=title, font=dict(size=15, color=font_color)),
-        "height":       height,
-        "plot_bgcolor": bg_color,
-        "paper_bgcolor":paper_bg,
-        "font":         dict(color=font_color, size=12),
-        "xaxis":        dict(gridcolor=grid_color, zerolinecolor=grid_color),
-        "yaxis":        dict(gridcolor=grid_color, zerolinecolor=grid_color),
-        "legend":       dict(font=dict(color=font_color)),
-        "margin":       dict(t=50, b=40, l=50, r=20),
+        "title":         dict(text=title, font=dict(size=15, color=font_color)),
+        "height":        height,
+        "plot_bgcolor":  bg_color,
+        "paper_bgcolor": paper_bg,
+        "font":          dict(color=font_color, size=12),
+        "xaxis":         dict(gridcolor=grid_color, zerolinecolor=grid_color),
+        "yaxis":         dict(gridcolor=grid_color, zerolinecolor=grid_color),
+        "legend":        dict(font=dict(color=font_color)),
     }
-    layout.update(kwargs)
+    layout.update(kwargs)                               # caller's kwargs applied here
+    if "margin" not in layout:                          # default margin only if not passed
+        layout["margin"] = dict(t=50, b=40, l=50, r=20)
     return layout

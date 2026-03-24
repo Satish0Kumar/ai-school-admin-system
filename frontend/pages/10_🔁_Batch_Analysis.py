@@ -1,4 +1,4 @@
-"""
+﻿"""
 Batch Risk Analysis
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 8: Run bulk ML predictions & view school-wide risk overview
@@ -156,18 +156,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("### 📚 Navigation")
-    if st.button("📊 Dashboard",             use_container_width=True):
+    if st.button("📊 Dashboard",             width='stretch'):
         st.switch_page("pages/1_📊_Dashboard.py")
-    if st.button("👥 Students",              use_container_width=True):
+    if st.button("👥 Students",              width='stretch'):
         st.switch_page("pages/2_👥_Students.py")
-    if st.button("🎯 Predictions",           use_container_width=True):
+    if st.button("🎯 Predictions",           width='stretch'):
         st.switch_page("pages/4_🎯_Predictions.py")
-    if st.button("📝 Marks Entry",           use_container_width=True):
+    if st.button("📝 Marks Entry",           width='stretch'):
         st.switch_page("pages/9_📝_Marks_Entry.py")
-    if st.button("🧠 Behavioral Dashboard",  use_container_width=True):
+    if st.button("🧠 Behavioral Dashboard",  width='stretch'):
         st.switch_page("pages/8_🧠_Behavioral_Dashboard.py")
     st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="primary"):
+    if st.button("🚪 Logout", width='stretch', type="primary"):
         SessionManager.logout()
         st.switch_page("app.py")
 
@@ -240,7 +240,7 @@ with tab1:
     with col_btn1:
         run_btn = st.button(
             "🚀 Run Batch Predictions Now",
-            use_container_width=True,
+            width='stretch',
             type="primary"
         )
     with col_btn2:
@@ -376,11 +376,10 @@ with tab1:
                         )
                     )])
                     fig_run.update_layout(
-                        **get_plotly_layout("Risk Distribution — This Run", height=300),
-                        margin=dict(t=40, b=10, l=10, r=10),
+                        **get_plotly_layout("Risk Distribution — This Run", height=300, margin=dict(t=40, b=10, l=10, r=10)),
                         showlegend=False
                     )
-                    st.plotly_chart(fig_run, use_container_width=True)
+                    st.plotly_chart(fig_run, width='stretch')
 
             # ── Per-student results table ──────────────────
             st.markdown("---")
@@ -427,7 +426,7 @@ with tab1:
                     )
                     st.dataframe(
                         styled_suc,
-                        use_container_width=True,
+                        width='stretch',
                         hide_index=True
                     )
 
@@ -438,7 +437,7 @@ with tab1:
                         data=csv,
                         file_name=f"batch_results_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                         mime="text/csv",
-                        use_container_width=True
+                        width='stretch'
                     )
 
             with res_tab2:
@@ -449,7 +448,7 @@ with tab1:
                         'Grade':   f"{r['grade']}{r.get('section','')}",
                         'Reason':  r.get('reason', '—')
                     } for r in skipped_results])
-                    st.dataframe(skip_df, use_container_width=True, hide_index=True)
+                    st.dataframe(skip_df, width='stretch', hide_index=True)
                     st.warning(
                         "⚠️ These students need academic records "
                         "entered before predictions can run."
@@ -465,7 +464,7 @@ with tab1:
                         'Grade':   f"{r['grade']}{r.get('section','')}",
                         'Error':   r.get('reason', '—')
                     } for r in failed_results])
-                    st.dataframe(fail_df, use_container_width=True, hide_index=True)
+                    st.dataframe(fail_df, width='stretch', hide_index=True)
                 else:
                     st.success("✅ No prediction failures!")
 
@@ -513,7 +512,7 @@ with tab2:
         st.markdown("<br/>", unsafe_allow_html=True)
         p_refresh = st.button(
             "🔄 Refresh",
-            use_container_width=True,
+            width='stretch',
             key="p_refresh"
         )
 
@@ -593,13 +592,13 @@ with tab2:
                 else:
                     return 'background:#f0fff4; color:#276749; font-weight:600;'
 
-            styled_table = table_df.style.applymap(
+            styled_table = table_df.style.map(
                 style_risk_col, subset=['Risk Level']
             )
 
             st.dataframe(
                 styled_table,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True
             )
 
@@ -614,7 +613,7 @@ with tab2:
                     f"{datetime.now().strftime('%Y%m%d')}.csv"
                 ),
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
 
 
@@ -726,11 +725,10 @@ with tab3:
                     )
                 )])
                 fig_donut.update_layout(
-                    **get_plotly_layout("🎯 School-wide Risk Distribution", height=350),
-                    margin=dict(t=50, b=20, l=10, r=10)
+                    **get_plotly_layout("🎯 School-wide Risk Distribution", height=350, margin=dict(t=50, b=20, l=10, r=10))
                 )
                 fig_donut.update_layout(legend=dict(orientation='v', x=1.02, y=0.5))
-                st.plotly_chart(fig_donut, use_container_width=True)
+                st.plotly_chart(fig_donut, width='stretch')
             else:
                 st.info("ℹ️ No prediction data yet.")
 
@@ -752,12 +750,11 @@ with tab3:
                     hovertemplate='<b>%{y}</b><br>Students: %{x}<extra></extra>'
                 )])
                 fig_bar.update_layout(
-                    **get_plotly_layout("📊 Students per Risk Level", height=350),
-                    margin=dict(t=50, b=40, l=80, r=40)
+                    **get_plotly_layout("📊 Students per Risk Level", height=350, margin=dict(t=50, b=40, l=80, r=40))
                 )
                 fig_bar.update_xaxes(title='Number of Students', showgrid=True)
                 fig_bar.update_yaxes(showgrid=False)
-                st.plotly_chart(fig_bar, use_container_width=True)
+                st.plotly_chart(fig_bar, width='stretch')
 
         st.markdown("---")
 
@@ -782,7 +779,7 @@ with tab3:
                 } for s in unpred_list])
                 st.dataframe(
                     unpred_df,
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True
                 )
 
@@ -790,7 +787,7 @@ with tab3:
                 if st.button(
                     "🚀 Run Predictions for These Students Now",
                     type="primary",
-                    use_container_width=True
+                    width='stretch'
                 ):
                     with st.spinner("🤖 Running predictions..."):
                         quick_result = api_post("/batch/run", {})
@@ -814,3 +811,4 @@ with tab3:
             &nbsp;|&nbsp; Data reflects latest stored predictions
         </p>
         """, unsafe_allow_html=True)
+

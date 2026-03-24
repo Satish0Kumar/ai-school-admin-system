@@ -30,13 +30,11 @@ def enter_marks():
 @jwt_required()
 def get_class_marks(grade, section):
     try:
-        subject  = request.args.get('subject')
         semester = request.args.get('semester')
         # Treat 'All' as no section filter
         result   = MarksService.get_class_marks(
             grade    = grade,
             section  = None if section == 'All' else section,
-            subject  = subject,
             semester = semester
         )
         return jsonify(result), 200

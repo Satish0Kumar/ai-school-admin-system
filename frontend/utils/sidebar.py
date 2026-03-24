@@ -3,7 +3,7 @@ ScholarSense - Shared Sidebar Navigation
 Import and call render_sidebar() at the top of every page
 """
 import streamlit as st
-from frontend.utils.session_manager import SessionManager
+from frontend.utils.session_manager import SessionManager, ENABLE_SESSION_PERSISTENCE
 
 def render_sidebar():
     """Render grouped navigation sidebar with user info"""
@@ -35,7 +35,7 @@ def render_sidebar():
         # ── Dark Mode Toggle ───────────────────────────────
         dark_mode = st.toggle(
             "🌙 Dark Mode",
-            value=st.session_state.get('dark_mode', True),   # ← True = dark by default
+            value=st.session_state.get('dark_mode', False),   # ← False = light mode by default
             key="dark_mode_toggle"
         )
         st.session_state['dark_mode'] = dark_mode
@@ -120,9 +120,16 @@ def render_sidebar():
 
         st.markdown("")
 
-        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
-            SessionManager.logout()
-            st.switch_page("app.py")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🚪 Logout", use_container_width=True, type="secondary"):
+                SessionManager.logout()
+                st.switch_page("app.py")
+        with col2:
+            if st.button("🧹 Clear Cache", use_container_width=True, type="secondary", help="Clear saved session to require fresh login"):
+                SessionManager.clear_session_cache()
+                st.success("✓ Session cache cleared! Please reload the page.")
+                st.balloons()
 
         # ── Preferences Panel ──────────────────────────────────
         from frontend.utils.preferences import render_preferences_panel
@@ -132,3 +139,14 @@ def render_sidebar():
         from frontend.utils.ui_helpers import show_shortcut_hints, inject_keyboard_shortcuts
         show_shortcut_hints()
         inject_keyboard_shortcuts()
+
+        # ── Session Info (Development) ──────────────────────────
+        st.divider()
+        session_status = "🔒 Enabled" if ENABLE_SESSION_PERSISTENCE else "🔓 Disabled (Fresh Login)"
+        st.markdown(f"""
+        <div style='font-size:0.75rem; color:#6b7280; padding:0.5rem; background:#f8fafc; border-radius:8px; border-left:3px solid #2563eb;'>
+            <strong>Session Persistence:</strong> {session_status}<br>
+            To enable persistent sessions (keep logged in), set:<br>
+            <code style='background:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;'>ENABLE_SESSION_PERSISTENCE=true</code>
+        </div>
+        """, unsafe_allow_html=True)
