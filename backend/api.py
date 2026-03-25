@@ -33,11 +33,17 @@ from backend.routes import register_blueprints
 app = Flask(__name__)
 
 # ── Configuration ──────────────────────────────────────────────────────
-app.config['SECRET_KEY']                = os.getenv('SECRET_KEY', 'dev-secret-key')
-app.config['JWT_SECRET_KEY']            = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
+app.config['SECRET_KEY']                = os.getenv('SECRET_KEY')
+app.config['JWT_SECRET_KEY']            = os.getenv('JWT_SECRET_KEY')
 app.config['JWT_ACCESS_TOKEN_EXPIRES']  = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 3600))
 app.config['JWT_ALGORITHM']             = 'HS256'
 app.config['PROPAGATE_EXCEPTIONS']      = True
+
+# Validate required secrets
+if not app.config['SECRET_KEY']:
+    raise ValueError("SECRET_KEY environment variable is required")
+if not app.config['JWT_SECRET_KEY']:
+    raise ValueError("JWT_SECRET_KEY environment variable is required")
 
 # Debug: Print JWT config
 print(f"\n🔐 JWT Configuration:")

@@ -54,7 +54,6 @@ class Student(Base):
     __tablename__ = 'students'
     __table_args__ = (
         CheckConstraint('grade BETWEEN 6 AND 10', name='valid_grade'),
-        CheckConstraint('age IS NULL OR (age BETWEEN 10 AND 20)', name='valid_age'),
     )
     
     id = Column(Integer, primary_key=True, index=True)
@@ -63,7 +62,6 @@ class Student(Base):
     last_name = Column(String(100), nullable=False)
     grade = Column(Integer, nullable=False, index=True)
     section = Column(String(10))
-    age = Column(Integer)  # Deprecated: compute from date_of_birth instead
     gender = Column(String(10))
     date_of_birth = Column(Date)
     parent_name = Column(String(255))
@@ -96,7 +94,7 @@ class Student(Base):
             return today.year - self.date_of_birth.year - (
                 (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
             )
-        return self.age  # Fall back to stored age if DOB not available
+        return None  # No fallback
     
     def __repr__(self):
         return f"<Student(id={self.id}, student_id='{self.student_id}', name='{self.full_name}')>"

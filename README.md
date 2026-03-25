@@ -116,6 +116,8 @@ SECRET_KEY=your-secret-key-here
 JWT_SECRET_KEY=your-jwt-secret-key
 JWT_ACCESS_TOKEN_EXPIRES=3600
 
+**⚠️ IMPORTANT:** SECRET_KEY and JWT_SECRET_KEY are now REQUIRED environment variables. The application will not start without them to prevent insecure deployments.
+
 # Application
 PROJECT_NAME=ScholarSense
 FLASK_ENV=development
@@ -152,10 +154,15 @@ ai-school-admin-system/
 │   ├── api.py                      # Flask REST API
 │   ├── database/
 │   │   ├── schema.sql              # Database schema
+│   │   ├── communications_migration.sql  # Database migrations
 │   │   ├── db_config.py            # Database configuration
 │   │   └── models.py               # SQLAlchemy models
 │   ├── auth/
 │   │   └── auth_service.py         # Authentication service
+│   ├── scripts/
+│   │   ├── fix_risk_prediction_scales.py  # Data repair script
+│   │   ├── fix_deprecations.ps1    # Deprecation fixes
+│   │   └── patch_plotly_dark.py    # Plotly theme patch
 │   └── services/
 │       ├── student_service.py      # Student CRUD
 │       ├── academic_service.py     # Academic records
@@ -166,14 +173,48 @@ ai-school-admin-system/
 │   │   ├── 1_📊_Dashboard.py      # Main dashboard
 │   │   ├── 2_👥_Students.py       # Student list
 │   │   ├── 3_👤_Student_Profile.py # Student details
-│   │   └── 4_🎯_Predictions.py    # Risk predictions
+│   │   ├── 4_🎯_Predictions.py    # Risk predictions
+│   │   ├── 5_📅_Attendance.py     # Attendance tracking
+│   │   ├── 6_📝_Incident_Logging.py # Behavioral incidents
+│   │   ├── 7_🔔_Notifications.py  # System notifications
+│   │   ├── 8_🧠_Behavioral_Dashboard.py # Behavior analytics
+│   │   ├── 9_📝_Marks_Entry.py    # Academic marks
+│   │   ├── 10_🔁_Batch_Analysis.py # Batch predictions
+│   │   ├── 11_📧_Parent_Portal.py # Parent communication
+│   │   ├── 12_📈_Analytics.py     # System analytics
+│   │   └── 13_👤_User_Management.py # User administration
 │   └── utils/
 │       ├── api_client.py           # API communication
 │       └── session_manager.py      # Session handling
+├── scripts/
+│   ├── demo_presentation.py        # Demo scripts
+│   ├── reset_passwords_deprecated.py # Legacy utilities
+│   └── train_model.py              # ML training
+├── tests/
+│   ├── test_api.py                 # API tests
+│   └── test_integration.py         # Integration tests
 ├── models/
 │   └── saved_models/               # ML model files
-├── .env                            # Environment variables
+├── data/
+│   ├── processed/                  # Processed datasets
+│   └── raw/                        # Raw data files
+├── docs/                           # Documentation
+├── .env                            # Environment variables (REQUIRED)
+├── .gitignore                     # Git ignore rules
 └── README.md                       # Documentation
+
+## 🔄 Recent Changes
+
+### v2.1.0 - Code Quality & Security Improvements
+- **Security**: Removed hardcoded fallback secret keys - now requires explicit environment variables
+- **Bug Fix**: Fixed key name mismatches in prediction service (`attendance_percentage` → `attendance_rate`, `disciplinary_incidents` → `behavioral_incidents`)
+- **Cleanup**: Moved utility scripts to `scripts/` directory
+- **Cleanup**: Moved database migrations to `backend/database/`
+- **Cleanup**: Moved test files to `tests/` directory
+- **Cleanup**: Removed committed log files and added `*.log` to `.gitignore`
+- **Refactor**: Removed deprecated `age` field from Student model (now computed from `date_of_birth`)
+- **UI**: Fixed page numbering gap (renamed User Management to page 13)
+
 🎯 API Endpoints
 Authentication
 POST /api/auth/login - User login

@@ -249,7 +249,7 @@ class PredictionService:
                     risk_level = min(3, risk_level + 1)  # Slight decline
                 
                 # Attendance factor (poor attendance increases risk)
-                attendance_rate = features.get('attendance_percentage', 100)
+                attendance_rate = features.get('attendance_rate', 100)
                 if attendance_rate < 60:
                     risk_level = min(3, risk_level + 2)  # Very low attendance
                 elif attendance_rate < 75:
@@ -263,8 +263,8 @@ class PredictionService:
                     risk_level = min(3, risk_level + 1)  # Some failures
                 
                 # Behavioral incidents
-                disciplinary_incidents = features.get('disciplinary_incidents', 0)
-                if disciplinary_incidents >= 3:
+                behavioral_incidents = features.get('behavioral_incidents', 0)
+                if behavioral_incidents >= 3:
                     risk_level = min(3, risk_level + 1)  # Behavioral issues
                 
                 # Assignment submission rate (engagement indicator)
