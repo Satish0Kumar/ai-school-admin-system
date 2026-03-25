@@ -33,19 +33,19 @@ from backend.routes import register_blueprints
 app = Flask(__name__)
 
 # ── Configuration ──────────────────────────────────────────────────────
-app.config['SECRET_KEY']                = os.getenv('SECRET_KEY')
-app.config['JWT_SECRET_KEY']            = os.getenv('JWT_SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is not set!")
+
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+if not JWT_SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY environment variable is not set!")
+
+app.config['SECRET_KEY']                = SECRET_KEY
+app.config['JWT_SECRET_KEY']            = JWT_SECRET_KEY
 app.config['JWT_ACCESS_TOKEN_EXPIRES']  = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 3600))
 app.config['JWT_ALGORITHM']             = 'HS256'
 app.config['PROPAGATE_EXCEPTIONS']      = True
-
-# Validate required secrets
-if not app.config['SECRET_KEY']:
-    raise ValueError("SECRET_KEY environment variable is required")
-if not app.config['JWT_SECRET_KEY']:
-    raise ValueError("JWT_SECRET_KEY environment variable is required")
-
-# Debug: Print JWT config
 print(f"\n🔐 JWT Configuration:")
 print(f"   Secret Key Length: {len(app.config['JWT_SECRET_KEY'])} chars")
 print(f"   Token Expiry: {app.config['JWT_ACCESS_TOKEN_EXPIRES']} seconds")
