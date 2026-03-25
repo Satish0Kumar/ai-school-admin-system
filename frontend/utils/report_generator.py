@@ -3,6 +3,8 @@ Report Generator — Generates downloadable HTML student reports.
 """
 from datetime import datetime
 
+from frontend.utils.risk_display import risk_metric_pct
+
 
 def generate_student_report(details: dict) -> str:
     """
@@ -57,11 +59,11 @@ def generate_student_report(details: dict) -> str:
         bg    = risk_bg.get(risk_label, '#eee')
 
         # Extract to variables BEFORE f-string to avoid NoneType format errors
-        conf     = float(pred.get('confidence_score')     or 0)
-        prob_low = float(pred.get('probability_low')      or 0)
-        prob_med = float(pred.get('probability_medium')   or 0)
-        prob_hi  = float(pred.get('probability_high')     or 0)
-        prob_cri = float(pred.get('probability_critical') or 0)
+        conf     = risk_metric_pct(pred.get('confidence_score'))
+        prob_low = risk_metric_pct(pred.get('probability_low'))
+        prob_med = risk_metric_pct(pred.get('probability_medium'))
+        prob_hi  = risk_metric_pct(pred.get('probability_high'))
+        prob_cri = risk_metric_pct(pred.get('probability_critical'))
         pred_date = pred.get('prediction_date', 'N/A')
 
         risk_html = f"""

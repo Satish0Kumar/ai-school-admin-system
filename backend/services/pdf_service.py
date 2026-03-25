@@ -512,15 +512,23 @@ class PDFService:
             ))
 
             if prediction:
-                risk_label  = prediction.risk_level or 'Low'
+                # risk_label is the human-readable bucket; risk_level is 0–3 int
+                _level_names = {0: 'Low', 1: 'Medium', 2: 'High', 3: 'Critical'}
+                risk_label = (prediction.risk_label or '').strip() or _level_names.get(
+                    int(prediction.risk_level) if prediction.risk_level is not None else 0,
+                    'Low'
+                )
                 risk_color  = RISK_COLORS.get(risk_label, TEXT_GRAY)
                 risk_icons  = {
                     'Low':'🟢', 'Medium':'🟡',
                     'High':'🟠', 'Critical':'🔴'
                 }
                 risk_icon   = risk_icons.get(risk_label, '⚪')
-                confidence  = f"{float(prediction.confidence_score)*100:.1f}%" \
-                              if prediction.confidence_score else 'N/A'
+                # Stored as percentage 0–100 (see prediction_service)
+                _conf = float(prediction.confidence_score)
+                if _conf > 100:
+                    _conf /= 100
+                confidence = f"{_conf:.1f}%" if prediction.confidence_score else 'N/A'
                 pred_date   = prediction.created_at.strftime('%d %b %Y') \
                             if prediction.created_at else 'N/A'
 

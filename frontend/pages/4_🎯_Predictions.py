@@ -1,4 +1,4 @@
-﻿"""
+"""
 Risk Predictions
 ScholarSense - AI-Powered Academic Intelligence System
 """
@@ -12,6 +12,7 @@ sys.path.insert(0, str(project_root))
 import streamlit as st
 from frontend.utils.session_manager import SessionManager
 from frontend.utils.api_client import APIClient
+from frontend.utils.risk_display import risk_metric_pct
 
 # Page config
 st.set_page_config(
@@ -88,7 +89,11 @@ if high_risk:
             st.markdown(f'<span class="risk-badge {risk_class}">{risk_label}</span>', unsafe_allow_html=True)
         
         with col4:
-            st.markdown(f'<p style="color: #4a5568;">Confidence: {pred["confidence_score"]:.1f}%</p>', unsafe_allow_html=True)
+            st.markdown(
+                f'<p style="color: #4a5568;">Confidence: '
+                f'{risk_metric_pct(pred["confidence_score"]):.1f}%</p>',
+                unsafe_allow_html=True
+            )
         
         with col5:
             if st.button("View", key=f"view_{student['id']}", width='stretch'):
@@ -117,7 +122,7 @@ if students:
                 
                 if 'error' not in result:
                     risk_label = result['risk_label']
-                    confidence = result['confidence_score']
+                    confidence = risk_metric_pct(result['confidence_score'])
                     model_version = result.get('model_version', 'Unknown')
                     
                     # Display result in a nice box
@@ -162,10 +167,10 @@ if students:
                     prob_data = {
                         'Risk Level': ['Low', 'Medium', 'High', 'Critical'],
                         'Probability': [
-                            result['probability_low'],
-                            result['probability_medium'],
-                            result['probability_high'],
-                            result['probability_critical']
+                            risk_metric_pct(result['probability_low']),
+                            risk_metric_pct(result['probability_medium']),
+                            risk_metric_pct(result['probability_high']),
+                            risk_metric_pct(result['probability_critical'])
                         ]
                     }
                     

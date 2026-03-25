@@ -401,7 +401,7 @@ class NotificationService:
 
             details = {
                 'Risk Level'      : f"{risk_emoji} {risk_label}",
-                'Confidence'      : f"{prediction.confidence_score*100:.1f}%" if prediction else 'N/A',
+                'Confidence'      : f"{float(prediction.confidence_score):.1f}%" if prediction else 'N/A',
                 'Assessment Date' : datetime.utcnow().strftime('%d %b %Y'),
                 'Recommendation'  : 'Schedule parent-teacher meeting'
             }

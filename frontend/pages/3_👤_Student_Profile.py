@@ -12,6 +12,7 @@ sys.path.insert(0, str(project_root))
 import streamlit as st
 import requests
 from frontend.utils.session_manager import SessionManager
+from frontend.utils.risk_display import risk_metric_pct
 from frontend.utils.api_client import APIClient
 import plotly.graph_objects as go
 from datetime import datetime, date, timedelta
@@ -36,6 +37,7 @@ inject_theme_css()
 
 # Require authentication
 SessionManager.require_auth()
+
 
 # Apply CSS
 st.markdown("""
@@ -480,7 +482,7 @@ with tab3:
                 <p style="font-size: 2rem; margin: 1rem 0;">
                     <span class="risk-badge {risk_class}">{risk_label}</span>
                 </p>
-                <p class=\"info-value\">{float(pred.get('confidence_score') or 0):.1f}% Confidence</p>
+                <p class=\"info-value\">{risk_metric_pct(pred.get('confidence_score')):.1f}% Confidence</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -488,10 +490,10 @@ with tab3:
         with col2:
             categories = ['Low', 'Medium', 'High', 'Critical']
             probs      = [
-                float(pred.get('probability_low')      or 0),
-                float(pred.get('probability_medium')   or 0),
-                float(pred.get('probability_high')     or 0),
-                float(pred.get('probability_critical') or 0)
+                risk_metric_pct(pred.get('probability_low')),
+                risk_metric_pct(pred.get('probability_medium')),
+                risk_metric_pct(pred.get('probability_high')),
+                risk_metric_pct(pred.get('probability_critical'))
             ]
             colors = ['#10b981', '#f59e0b', '#ef4444', '#b91c1c']
 
@@ -522,7 +524,10 @@ with tab3:
                         icon="🎯",
                         level="info"
                     )
-                    st.success(f"✅ Updated: {result['risk_label']} ({result['confidence_score']:.1f}%)")
+                    st.success(
+                        f"✅ Updated: {result['risk_label']} "
+                        f"({risk_metric_pct(result.get('confidence_score')):.1f}%)"
+                    )
                     st.rerun()
                 else:
                     st.error(f"❌ {result['error']}")

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Batch Risk Analysis
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 8: Run bulk ML predictions & view school-wide risk overview
@@ -16,6 +16,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 from frontend.utils.session_manager import SessionManager
+from frontend.utils.risk_display import risk_metric_pct
 
 # ============================================
 # PAGE CONFIG
@@ -405,7 +406,7 @@ with tab1:
                             'ID':         r['student_code'],
                             'Grade':      f"{r['grade']}{r.get('section','')}",
                             'Risk':       f"{icon} {r['risk_label']}",
-                            'Confidence': f"{r['confidence_score']:.1f}%",
+                            'Confidence': f"{risk_metric_pct(r['confidence_score']):.1f}%",
                             'GPA':        f"{r['gpa']:.1f}%",
                             'Failed Subs':r['failed_subjects']
                         })
@@ -572,11 +573,11 @@ with tab2:
                     'ID':           s['student_code'],
                     'Grade':        f"{s['grade']}{s.get('section','')}",
                     'Risk Level':   f"{icon} {s['risk_label']}",
-                    'Confidence':   f"{s['confidence_score']:.1f}%",
-                    'P(Critical)':  f"{s['probability_critical']:.1f}%",
-                    'P(High)':      f"{s['probability_high']:.1f}%",
-                    'P(Medium)':    f"{s['probability_medium']:.1f}%",
-                    'P(Low)':       f"{s['probability_low']:.1f}%",
+                    'Confidence':   f"{risk_metric_pct(s['confidence_score']):.1f}%",
+                    'P(Critical)':  f"{risk_metric_pct(s['probability_critical']):.1f}%",
+                    'P(High)':      f"{risk_metric_pct(s['probability_high']):.1f}%",
+                    'P(Medium)':    f"{risk_metric_pct(s['probability_medium']):.1f}%",
+                    'P(Low)':       f"{risk_metric_pct(s['probability_low']):.1f}%",
                     'Predicted At': predicted_at
                 })
 

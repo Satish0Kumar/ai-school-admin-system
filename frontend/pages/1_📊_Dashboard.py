@@ -223,27 +223,6 @@ render_page_header(
     section  = "Overview"
 )
 
-# ── Phase 5 completion notice (remove after review) ───────
-if st.session_state.get('show_phase5_banner', True):
-    col_b, col_x = st.columns([10, 1])
-    with col_b:
-        st.markdown("""
-        <div style="background:linear-gradient(135deg,#f0fff4,#c6f6d5);
-                    border:1px solid #9ae6b4; border-radius:10px;
-                    padding:0.65rem 1.25rem; margin-bottom:0.75rem;
-                    display:flex; align-items:center; gap:0.75rem;">
-            <span style="font-size:1.3rem;">🎉</span>
-            <span style="color:#22543d; font-weight:700; font-size:0.9rem;">
-                Phase 5 Complete! Toast notifications, dark mode,
-                bulk actions, global search, export reports & more — all live.
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_x:
-        if st.button("✕", key="dismiss_banner"):
-            st.session_state['show_phase5_banner'] = False
-            st.rerun()
-
 
 # ── Global Search ──────────────────────────────────────────
 from frontend.utils.global_search import render_global_search

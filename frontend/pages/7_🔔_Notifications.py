@@ -1,14 +1,7 @@
 ﻿"""
-Notifications Page - Parent Alert System
-ScholarSense - AI-Powered Academic Intelligence System
-
-Features:
-- Notification statistics dashboard
-- Grade/Section wise bulk send
-- Notification history table
-- Per-student manual notify
+Parent Notification System
+ScholarSense - Send Custom Academic Messages to Parents
 """
-
 import sys
 from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
@@ -16,567 +9,334 @@ sys.path.insert(0, str(project_root))
 
 import streamlit as st
 import requests
+import pandas as pd
 from datetime import datetime
 from frontend.utils.session_manager import SessionManager
-from frontend.utils.api_client import APIClient
 
-# ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title = "Notifications - ScholarSense",
-    page_icon  = "🔔",
-    layout     = "wide"
+    page_title="Parent Notifications - ScholarSense",
+    page_icon="🔔",
+    layout="wide"
 )
 
 from frontend.utils.sidebar import render_sidebar
 render_sidebar()
-
 from frontend.utils.ui_helpers import inject_theme_css
 inject_theme_css()
 
-
-SessionManager.initialize_session()
 SessionManager.require_auth()
 
-token = SessionManager.get_token()
-
-# ── CSS ────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .stat-card {
-        background: white;
-        border-radius: 14px;
-        padding: 20px 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-        text-align: center;
-        border-top: 4px solid #2563eb;
-    }
-    .stat-card.green  { border-top-color: #10b981; }
-    .stat-card.red    { border-top-color: #ef4444; }
-    .stat-card.orange { border-top-color: #f59e0b; }
-    .stat-card.purple { border-top-color: #8b5cf6; }
-
-    .stat-number {
-        font-size: 2.4rem;
-        font-weight: 800;
-        color: #1a202c;
-        margin: 0;
-        line-height: 1;
-    }
-    .stat-label {
-        font-size: 0.88rem;
-        color: #6b7280;
-        margin-top: 6px;
-        font-weight: 500;
-    }
-
-    .section-header {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #1a202c;
-        margin: 1.5rem 0 1rem 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #e5e7eb;
-    }
-
-    .notif-badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.78rem;
-        font-weight: 600;
-    }
-    .badge-sent     { background:#d1fae5; color:#065f46; }
-    .badge-failed   { background:#fee2e2; color:#991b1b; }
-    .badge-pending  { background:#fef3c7; color:#92400e; }
-
-    .type-badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-    }
-    .type-low_gpa         { background:#fef3c7; color:#92400e; }
-    .type-high_risk       { background:#fee2e2; color:#991b1b; }
-    .type-low_attendance  { background:#fff7ed; color:#9a3412; }
-    .type-failed_subjects { background:#f5f3ff; color:#5b21b6; }
-
-    .send-panel {
-        background: white;
-        border-radius: 14px;
-        padding: 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-        margin-bottom: 1rem;
-    }
-
-    #MainMenu { visibility: hidden; }
-    footer    { visibility: hidden; }
+    .main { background-color: #f7fafc; padding: 1rem 2rem; }
+    .kpi-card { background: white; padding: 1.2rem 1rem; border-radius: 14px;
+                border: 1px solid #e2e8f0; text-align: center; margin-bottom: 1rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; margin: 0.2rem 0; }
+    .kpi-label { font-size: 0.8rem; color: #4a5568; font-weight: 600;
+                 text-transform: uppercase; letter-spacing: 0.04em; }
+    .preview-box { background: #f8faff; padding: 1.5rem; border-radius: 10px;
+                   border: 1px solid #c3dafe; font-family: Arial, sans-serif;
+                   font-size: 0.9rem; line-height: 1.7; white-space: pre-wrap; color: #1a202c; }
+    [data-testid="stSidebar"] { background-color: white; border-right: 1px solid #e2e8f0; }
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
+API_BASE = "http://localhost:5000/api"
+GRADES   = [6, 7, 8, 9, 10]
 
-# ── Helper: API calls ──────────────────────────────────────────────────────────
-def api_get(endpoint):
-    try:
-        r = requests.get(
-            f"http://localhost:5000{endpoint}",
-            headers = {'Authorization': f'Bearer {token}'},
-            timeout = 30
-        )
-        return r.json() if r.status_code == 200 else {}
-    except Exception as e:
-        return {}
+MESSAGE_TEMPLATES = {
+    "📊 General Academic Update": (
+        "Academic Update",
+        "Dear {parent_name},\n\nThis is an academic update for your child {student_name} "
+        "(Grade {grade}{section}).\n\n{custom_message}\n\nFor queries, please contact the school.\n\nWarm regards,\nScholarSense"
+    ),
+    "📉 Low GPA Alert": (
+        "Academic Performance Alert",
+        "Dear {parent_name},\n\nWe would like to inform you that {student_name}'s current GPA "
+        "has dropped to {gpa}%, which is below our threshold of 50%.\n\n{custom_message}\n\n"
+        "Please schedule a parent-teacher meeting at the earliest.\n\nWarm regards,\nScholarSense"
+    ),
+    "📅 Attendance Alert": (
+        "Attendance Concern",
+        "Dear {parent_name},\n\nWe are concerned about {student_name}'s attendance. "
+        "Regular attendance is crucial for academic success.\n\n{custom_message}\n\n"
+        "Warm regards,\nScholarSense"
+    ),
+    "🏆 Achievement Update": (
+        "Achievement Notification",
+        "Dear {parent_name},\n\nWe are pleased to share a positive update about {student_name}.\n\n"
+        "{custom_message}\n\nKeep encouraging your child!\n\nWarm regards,\nScholarSense"
+    ),
+    "📝 Exam / Test Reminder": (
+        "Upcoming Exam Reminder",
+        "Dear {parent_name},\n\nThis is a reminder regarding an upcoming exam/test for {student_name}.\n\n"
+        "{custom_message}\n\nPlease ensure your child is well-prepared.\n\nWarm regards,\nScholarSense"
+    ),
+    "✍️ Custom Message": (
+        "Message from ScholarSense",
+        "{custom_message}"
+    ),
+}
 
-def api_post(endpoint, body={}):
+def get_headers():
+    return {"Authorization": f"Bearer {st.session_state.get('token', '')}"}
+
+def api_get(endpoint, params=None):
     try:
-        r = requests.post(
-            f"http://localhost:5000{endpoint}",
-            headers = {
-                'Authorization': f'Bearer {token}',
-                'Content-Type' : 'application/json'
-            },
-            json    = body,
-            timeout = 300   # 5 min for bulk operations
-        )
+        r = requests.get(f"{API_BASE}{endpoint}", headers=get_headers(), params=params, timeout=15)
         return r.json()
     except Exception as e:
-        return {'error': str(e)}
+        return {"status": "error", "message": str(e)}
 
+def api_post(endpoint, payload):
+    try:
+        r = requests.post(f"{API_BASE}{endpoint}", headers=get_headers(), json=payload, timeout=30)
+        return r.json()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
-# ── Page Title ─────────────────────────────────────────────────────────────────
-st.markdown("# 🔔 Parent Notification System")
-st.markdown("Send automated alerts to parents based on student academic performance.")
+def get_all_students():
+    res = api_get("/students", params={"limit": 500})
+    if isinstance(res, list):
+        return res
+    if isinstance(res, dict):
+        return res.get('students', res.get('data', []))
+    return []
+def build_message(template_body, student, custom_message, gpa="N/A"):
+    return template_body.format(
+        parent_name    = student.get('parent_name', 'Parent/Guardian'),
+        student_name   = f"{student.get('first_name','')} {student.get('last_name','')}",
+        grade          = student.get('grade', ''),
+        section        = student.get('section', ''),
+        gpa            = gpa,
+        custom_message = custom_message or ''
+    )
+
+# ── PAGE HEADER ─────────────────────────────────────────
+st.markdown("""
+    <h1 style='color:#1a202c; margin-bottom:0;'>🔔 Parent Notification System</h1>
+    <p style='color:#4a5568; margin-top:0.25rem;'>
+        Send custom academic messages to individual parents or entire grades/sections at once.
+    </p>
+    <hr style='border:none; border-top:1px solid #e2e8f0; margin:1rem 0;'/>
+""", unsafe_allow_html=True)
+
+# ── QUICK STATS ─────────────────────────────────────────
+with st.spinner(""):
+    stats_res = api_get("/communications/stats")
+
+if stats_res.get('status') == 'success':
+    stats = stats_res['data']
+    qc1, qc2, qc3, qc4 = st.columns(4)
+    sent_count   = next((x['count'] for x in stats.get('by_status', []) if x['status'] == 'sent'), 0)
+    failed_count = next((x['count'] for x in stats.get('by_status', []) if x['status'] == 'failed'), 0)
+    with qc1:
+        st.markdown(f'<div class="kpi-card" style="border-top:4px solid #2563eb;"><p class="kpi-label">📧 Total Sent</p><p class="kpi-value" style="color:#2563eb;">{stats.get("total",0)}</p></div>', unsafe_allow_html=True)
+    with qc2:
+        st.markdown(f'<div class="kpi-card" style="border-top:4px solid #00CC44;"><p class="kpi-label">✅ Successful</p><p class="kpi-value" style="color:#00CC44;">{sent_count}</p></div>', unsafe_allow_html=True)
+    with qc3:
+        st.markdown(f'<div class="kpi-card" style="border-top:4px solid #FF4B4B;"><p class="kpi-label">❌ Failed</p><p class="kpi-value" style="color:#FF4B4B;">{failed_count}</p></div>', unsafe_allow_html=True)
+    with qc4:
+        st.markdown(f'<div class="kpi-card" style="border-top:4px solid #FFA500;"><p class="kpi-label">📅 Last 7 Days</p><p class="kpi-value" style="color:#FFA500;">{stats.get("last_week",0)}</p></div>', unsafe_allow_html=True)
+
 st.markdown("---")
 
+# ── SEND MODE ───────────────────────────────────────────
+send_mode = st.radio(
+    "📌 Select Send Mode",
+    options=["👤 Single Student", "📚 Batch Send (Grade / Section)"],
+    horizontal=True
+)
 
-# ==============================================================================
-# SECTION 1 — STATS CARDS
-# ==============================================================================
+st.markdown("---")
 
-stats = api_get('/api/notifications/stats')
+with st.spinner("Loading students..."):
+    all_students = get_all_students()
 
-col1, col2, col3, col4, col5 = st.columns(5)
+if not all_students:
+    st.warning("⚠️ No students found.")
+    st.stop()
 
-with col1:
-    st.markdown(f"""
-    <div class="stat-card">
-        <p class="stat-number">{stats.get('total', 0)}</p>
-        <p class="stat-label">📊 Total Sent</p>
-    </div>""", unsafe_allow_html=True)
+# ============================================================
+# SINGLE STUDENT MODE
+# ============================================================
+if send_mode == "👤 Single Student":
 
-with col2:
-    st.markdown(f"""
-    <div class="stat-card green">
-        <p class="stat-number">{stats.get('sent', 0)}</p>
-        <p class="stat-label">✅ Successful</p>
-    </div>""", unsafe_allow_html=True)
-
-with col3:
-    st.markdown(f"""
-    <div class="stat-card red">
-        <p class="stat-number">{stats.get('failed', 0)}</p>
-        <p class="stat-label">❌ Failed</p>
-    </div>""", unsafe_allow_html=True)
-
-with col4:
-    st.markdown(f"""
-    <div class="stat-card orange">
-        <p class="stat-number">{stats.get('today', 0)}</p>
-        <p class="stat-label">📅 Today</p>
-    </div>""", unsafe_allow_html=True)
-
-with col5:
-    by_type    = stats.get('by_type', {})
-    high_risk  = by_type.get('high_risk', 0)
-    st.markdown(f"""
-    <div class="stat-card purple">
-        <p class="stat-number">{high_risk}</p>
-        <p class="stat-label">🚨 High Risk Alerts</p>
-    </div>""", unsafe_allow_html=True)
-
-st.write("")
-
-# ── Type breakdown ─────────────────────────────────────────────────────────────
-by_type = stats.get('by_type', {})
-if any(v > 0 for v in by_type.values()):
-    c1, c2, c3, c4 = st.columns(4)
-    type_info = {
-        'low_gpa'        : ('📉', 'Low GPA',         c1),
-        'high_risk'      : ('🚨', 'High Risk',        c2),
-        'low_attendance' : ('📅', 'Low Attendance',   c3),
-        'failed_subjects': ('📝', 'Failed Subjects',  c4),
+    st.markdown("#### 👤 Step 1 — Select Student")
+    student_map = {
+        f"{s['student_id']} — {s['first_name']} {s['last_name']} "
+        f"(Grade {s['grade']}{s.get('section','')})": s
+        for s in all_students
     }
-    for key, (icon, label, col) in type_info.items():
-        with col:
-            st.metric(f"{icon} {label}", by_type.get(key, 0))
-
-st.markdown("---")
-
-
-# ==============================================================================
-# SECTION 2 — SEND NOTIFICATIONS PANEL
-# ==============================================================================
-
-st.markdown('<div class="section-header">📤 Send Parent Notifications</div>',
-            unsafe_allow_html=True)
-
-with st.container():
-    st.markdown('<div class="send-panel">', unsafe_allow_html=True)
-
-    col_left, col_right = st.columns([2, 1])
-
-    with col_left:
-        st.markdown("##### 🎯 Select Target Students")
-
-        col_g, col_s = st.columns(2)
-
-        with col_g:
-            grade_options = ['All Grades', 'Grade 6', 'Grade 7',
-                             'Grade 8', 'Grade 9', 'Grade 10']
-            selected_grade = st.selectbox(
-                "📚 Grade",
-                grade_options,
-                key = "notif_grade"
-            )
-
-        with col_s:
-            section_options = ['All Sections', 'Section A',
-                               'Section B', 'Section C']
-            selected_section = st.selectbox(
-                "🏫 Section",
-                section_options,
-                key = "notif_section"
-            )
-
-        st.markdown("##### ℹ️ What will be checked?")
-        st.markdown("""
-        - 📉 **Low GPA** → GPA below 50%
-        - 🚨 **High Risk** → ML risk level High or Critical
-        - 📅 **Low Attendance** → Below 75% in last 30 days
-        - 📝 **Failed Subjects** → 2 or more subjects failed
-        """)
-
-    with col_right:
-        st.markdown("##### 📊 Estimated Reach")
-
-        # Parse selections
-        grade   = None
-        section = None
-
-        if selected_grade != 'All Grades':
-            grade = int(selected_grade.split(' ')[1])
-        if selected_section != 'All Sections':
-            section = selected_section.split(' ')[1]
-
-        # Get student count estimate
-        try:
-            count_url = "http://localhost:5000/api/students/count"
-            params    = {}
-            if grade:
-                params['grade'] = grade
-            r = requests.get(
-                count_url,
-                headers = {'Authorization': f'Bearer {token}'},
-                params  = params,
-                timeout = 5
-            )
-            if r.status_code == 200:
-                total_students = r.json().get('count', 0)
-            else:
-                total_students = 400
-        except Exception:
-            total_students = 400
-
-        st.metric("👥 Students to Check", total_students)
-        st.info(
-            "💡 Only students meeting alert conditions will receive emails. "
-            "Cooldown prevents duplicate alerts."
-        )
-
-        st.write("")
-
-        # ── SEND BUTTON ────────────────────────────────────────────────────
-        send_clicked = st.button(
-            "📨 Send Notifications",
-            type               = "primary",
-            width             = 'stretch',
-            key                = "send_notif_btn"
-        )
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ── Handle Send ────────────────────────────────────────────────────────────────
-if send_clicked:
-    body = {}
-    if grade:
-        body['grade']   = grade
-    if section:
-        body['section'] = section
-
-    label = f"Grade {grade}" if grade else "All Grades"
-    if section:
-        label += f" - Section {section}"
-
-    with st.spinner(f"⏳ Sending notifications for {label}... (this may take 1-3 minutes)"):
-        result = api_post('/api/notifications/bulk-check', body)
-
-    if 'error' in result:
-        st.error(f"❌ {result['error']}")
-    else:
-        st.success("✅ Notification check complete!")
-
-        # ── Results summary ─────────────────────────────────────────────────
-        r1, r2, r3, r4 = st.columns(4)
-        with r1:
-            st.metric("👥 Students Checked",
-                      result.get('total_students', 0))
-        with r2:
-            st.metric("✅ Emails Sent",
-                      result.get('sent', 0),
-                      delta = f"+{result.get('sent', 0)}")
-        with r3:
-            st.metric("❌ Failed",
-                      result.get('failed', 0))
-        with r4:
-            st.metric("⏭️ No Trigger",
-                      result.get('no_trigger', 0))
-
-        if result.get('sent', 0) > 0:
-            st.balloons()
-            st.info(
-                f"📧 {result.get('sent', 0)} parent(s) have been notified. "
-                f"Check notification history below."
-            )
+    sc1, sc2 = st.columns([3, 1])
+    with sc1:
+        sel_label = st.selectbox("Select Student", list(student_map.keys()), key="notif_single")
+    sel_student  = student_map[sel_label]
+    parent_email = sel_student.get('parent_email', '')
+    with sc2:
+        st.markdown("<br/>", unsafe_allow_html=True)
+        if parent_email:
+            st.success(f"📧 {parent_email}")
         else:
-            st.info(
-                "ℹ️ No notifications were triggered. "
-                "Either all students are performing well or "
-                "cooldown is active for recent alerts."
-            )
+            st.error("❌ No parent email")
 
-        # Refresh stats
-        st.rerun()
+    st.markdown("---")
+    st.markdown("#### 📋 Step 2 — Compose Message")
 
-
-st.markdown("---")
-
-
-# ==============================================================================
-# SECTION 3 — MANUAL NOTIFICATION (Per Student)
-# ==============================================================================
-
-st.markdown('<div class="section-header">✍️ Send Manual Notification</div>',
-            unsafe_allow_html=True)
-
-with st.expander("📮 Send custom message to a specific student's parent",
-                 expanded=False):
-
-    col_a, col_b = st.columns(2)
-
-    with col_a:
-        student_id_input = st.number_input(
-            "🔢 Student ID (Database ID)",
-            min_value = 1,
-            max_value = 9999,
-            value     = 1,
-            key       = "manual_student_id"
-        )
-
-        notif_type = st.selectbox(
-            "📋 Notification Type",
-            options = [
-                'low_gpa',
-                'high_risk',
-                'low_attendance',
-                'failed_subjects'
-            ],
-            format_func = lambda x: {
-                'low_gpa'        : '📉 Low GPA Alert',
-                'high_risk'      : '🚨 High Risk Alert',
-                'low_attendance' : '📅 Low Attendance Warning',
-                'failed_subjects': '📝 Failed Subjects Alert'
-            }.get(x, x),
-            key = "manual_notif_type"
-        )
-
-    with col_b:
-        custom_message = st.text_area(
-            "💬 Custom Message",
-            placeholder = (
-                "e.g. Dear Parent, we would like to inform you that "
-                "your child's academic performance needs immediate attention..."
-            ),
-            height = 120,
-            key    = "manual_message"
-        )
-
-        send_manual = st.button(
-            "📨 Send Manual Notification",
-            type               = "primary",
-            width             = 'stretch',
-            key                = "send_manual_btn"
-        )
-
-    if send_manual:
-        if not custom_message.strip():
-            st.error("❌ Please enter a message")
+    mc1, mc2 = st.columns([2, 1])
+    with mc1:
+        sel_template = st.selectbox("📌 Message Type", list(MESSAGE_TEMPLATES.keys()), key="notif_tmpl")
+    with mc2:
+        if sel_template in ("📉 Low GPA Alert",):
+            gpa_val = st.number_input("📊 GPA (%)", 0.0, 100.0, 50.0, 0.5, key="notif_gpa")
         else:
-            with st.spinner("Sending notification..."):
-                result = api_post(
-                    f'/api/students/{student_id_input}/notify',
-                    {
-                        'notification_type': notif_type,
-                        'message'          : custom_message.strip()
-                    }
-                )
+            gpa_val = "N/A"
 
-            if result.get('status') == 'sent':
-                st.success(
-                    f"✅ Notification sent to "
-                    f"{result.get('sent_to', 'parent')} "
-                    f"for student {result.get('student', '')}!"
-                )
-            elif 'error' in result:
-                st.error(f"❌ {result['error']}")
-
-
-st.markdown("---")
-
-
-# ==============================================================================
-# SECTION 4 — NOTIFICATION HISTORY TABLE
-# ==============================================================================
-
-st.markdown('<div class="section-header">📋 Notification History</div>',
-            unsafe_allow_html=True)
-
-col_filter1, col_filter2, col_refresh = st.columns([2, 2, 1])
-
-with col_filter1:
-    history_limit = st.selectbox(
-        "Show last",
-        [25, 50, 100, 200],
-        key = "history_limit"
+    custom_msg = st.text_area(
+        "✍️ Your Message / Additional Details *",
+        placeholder="Write your message here. This will be inserted into the template...",
+        height=120,
+        key="notif_msg"
     )
 
-with col_filter2:
-    filter_status = st.selectbox(
-        "Filter by Status",
-        ['All', 'sent', 'failed', 'pending'],
-        key = "filter_status"
-    )
+    _, template_body = MESSAGE_TEMPLATES[sel_template]
+    preview_text = build_message(template_body, sel_student, custom_msg, gpa_val)
 
-with col_refresh:
-    st.write("")
-    st.write("")
-    if st.button("🔄 Refresh", width='stretch'):
-        st.rerun()
+    st.markdown("---")
+    st.markdown("#### 👁️ Step 3 — Preview Email")
+    with st.expander("📬 Preview Email", expanded=True):
+        st.markdown(f'<div class="preview-box">{preview_text}</div>', unsafe_allow_html=True)
 
-# ── Fetch notifications ────────────────────────────────────────────────────────
-notifications = api_get(f'/api/notifications?limit={history_limit}')
+    st.markdown("---")
+    st.markdown("#### 📤 Step 4 — Send")
 
-if not notifications:
-    st.info("📭 No notifications sent yet. Use the panel above to send notifications.")
-else:
-    # Filter by status
-    if filter_status != 'All':
-        notifications = [
-            n for n in notifications
-            if n.get('status') == filter_status
-        ]
-
-    if not notifications:
-        st.info(f"No {filter_status} notifications found.")
+    if not parent_email:
+        st.error("❌ No parent email on file. Update student record first.")
+    elif not custom_msg.strip():
+        st.warning("⚠️ Please write a message before sending.")
     else:
-        st.markdown(f"**Showing {len(notifications)} notifications**")
-        st.write("")
-
-        # ── Type icons & badge HTML ─────────────────────────────────────────
-        type_icons = {
-            'low_gpa'        : '📉',
-            'high_risk'      : '🚨',
-            'low_attendance' : '📅',
-            'failed_subjects': '📝'
-        }
-
-        # ── Build display table ─────────────────────────────────────────────
-        for notif in notifications:
-            ntype      = notif.get('notification_type', '')
-            status     = notif.get('status', '')
-            icon       = type_icons.get(ntype, '📧')
-            student    = notif.get('student_name', f"Student #{notif.get('student_id')}")
-            grade      = notif.get('grade', '')
-            section    = notif.get('section', '')
-            sent_to    = notif.get('sent_to_email', 'N/A')
-            created_at = notif.get('created_at', '')
-            reason     = notif.get('trigger_reason', '')
-
-            # Format date
-            try:
-                dt = datetime.fromisoformat(created_at.replace('Z',''))
-                date_str = dt.strftime('%d %b %Y %H:%M')
-            except Exception:
-                date_str = created_at[:16] if created_at else 'N/A'
-
-            # Status badge color
-            badge_color = {
-                'sent'   : '#d1fae5',
-                'failed' : '#fee2e2',
-                'pending': '#fef3c7'
-            }.get(status, '#f3f4f6')
-
-            badge_text_color = {
-                'sent'   : '#065f46',
-                'failed' : '#991b1b',
-                'pending': '#92400e'
-            }.get(status, '#374151')
-
-            # Type label
-            type_labels = {
-                'low_gpa'        : 'Low GPA',
-                'high_risk'      : 'High Risk',
-                'low_attendance' : 'Low Attendance',
-                'failed_subjects': 'Failed Subjects'
+        if st.button(f"📤 Send to {parent_email}", type="primary", width='stretch', key="single_notif_send"):
+            template_subject, _ = MESSAGE_TEMPLATES[sel_template]
+            payload = {
+                'student_id':          sel_student['id'],
+                'communication_type':  'Custom',
+                'custom_subject':      template_subject,
+                'custom_message':      preview_text,
+                'extra_data':          {}
             }
+            with st.spinner("📤 Sending..."):
+                result = api_post("/communications/send", payload)
+            if result.get('status') == 'success':
+                st.success(f"✅ Message sent to **{parent_email}**!")
+                st.balloons()
+            else:
+                st.error(f"❌ Failed: {result.get('message', 'Unknown error')}")
 
-            with st.container():
-                st.markdown(f"""
-                <div style="background:white; border-radius:10px; padding:14px 18px;
-                            margin-bottom:8px; border-left:4px solid
-                            {'#10b981' if status=='sent' else '#ef4444' if status=='failed' else '#f59e0b'};
-                            box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-                    <div style="display:flex; justify-content:space-between;
-                                align-items:center; flex-wrap:wrap; gap:8px;">
-                        <div>
-                            <span style="font-size:1.1rem;">{icon}</span>
-                            <strong style="color:#1a202c; font-size:0.95rem;">
-                                {student}
-                            </strong>
-                            <span style="color:#6b7280; font-size:0.85rem;">
-                                &nbsp;|&nbsp; Grade {grade} - {section}
-                            </span>
-                        </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <span style="background:{badge_color}; color:{badge_text_color};
-                                         padding:3px 10px; border-radius:20px;
-                                         font-size:0.78rem; font-weight:600;">
-                                {status.upper()}
-                            </span>
-                            <span style="color:#9ca3af; font-size:0.82rem;">
-                                {date_str}
-                            </span>
-                        </div>
-                    </div>
-                    <div style="margin-top:6px;">
-                        <span style="color:#6b7280; font-size:0.83rem;">
-                            📧 {sent_to} &nbsp;|&nbsp;
-                            🏷️ {type_labels.get(ntype, ntype)}
-                        </span>
-                    </div>
-                    <div style="margin-top:4px; color:#374151;
-                                font-size:0.85rem; line-height:1.4;">
-                        {reason[:120] + '...' if len(reason) > 120 else reason}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+# ============================================================
+# BATCH SEND MODE
+# ============================================================
+else:
+    st.markdown("#### 📚 Step 1 — Select Target Grade & Section")
 
+    bc1, bc2 = st.columns(2)
+    with bc1:
+        sel_grade   = st.selectbox("🎓 Grade", ["All Grades"] + GRADES, key="notif_grade")
+    with bc2:
+        sel_section = st.selectbox("📌 Section", ["All Sections", "A", "B", "C", "D", "E"], key="notif_section")
+
+    # Filter students
+    filtered = [
+        s for s in all_students
+        if (sel_grade == "All Grades" or s.get('grade') == sel_grade) and
+           (sel_section == "All Sections" or s.get('section') == sel_section)
+    ]
+    with_email = [s for s in filtered if s.get('parent_email')]
+    no_email   = [s for s in filtered if not s.get('parent_email')]
+
+    # Preview table
+    if filtered:
+        st.dataframe(pd.DataFrame([{
+            'Student':      f"{s['first_name']} {s['last_name']}",
+            'Grade':        f"{s['grade']}{s.get('section','')}",
+            'Parent Email': s.get('parent_email') or '❌ No email'
+        } for s in filtered]), width='stretch', hide_index=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.success(f"✅ **{len(with_email)}** students will receive the message")
+        with col2:
+            if no_email:
+                st.warning(f"⚠️ **{len(no_email)}** skipped — no parent email")
+
+    st.markdown("---")
+    st.markdown("#### 📋 Step 2 — Compose Message")
+
+    mc1, mc2 = st.columns([2, 1])
+    with mc1:
+        sel_template = st.selectbox("📌 Message Type", list(MESSAGE_TEMPLATES.keys()), key="batch_tmpl")
+
+    custom_msg = st.text_area(
+        "✍️ Your Message / Additional Details *",
+        placeholder="Write your message here. It will be personalised for each student...",
+        height=120,
+        key="batch_msg"
+    )
+
+    # Preview with first student as sample
+    if with_email:
+        _, template_body  = MESSAGE_TEMPLATES[sel_template]
+        sample_preview    = build_message(template_body, with_email[0], custom_msg)
+        st.markdown("#### 👁️ Preview (sample — first student)")
+        with st.expander("📬 Preview Email", expanded=False):
+            st.markdown(f'<div class="preview-box">{sample_preview}</div>', unsafe_allow_html=True)
+        st.caption("⚠️ Each email will be personalised with the student's name, grade, and parent name.")
+
+    st.markdown("---")
+    st.markdown("#### 📤 Step 3 — Send")
+
+    if not filtered:
+        st.warning("⚠️ No students in this selection.")
+    elif len(with_email) == 0:
+        st.error("❌ No students in this selection have parent emails.")
+    elif not custom_msg.strip():
+        st.warning("⚠️ Please write a message before sending.")
+    else:
+        st.warning(f"⚠️ This will send **{len(with_email)} emails**. This cannot be undone.")
+        if st.button(
+            f"🚀 Send to All {len(with_email)} Parents",
+            type="primary", width='stretch', key="batch_notif_send"
+        ):
+            template_subject, template_body = MESSAGE_TEMPLATES[sel_template]
+            progress     = st.progress(0, text="Starting...")
+            success_count, fail_count = 0, 0
+            results_log  = []
+
+            for idx, student in enumerate(with_email):
+                name = f"{student['first_name']} {student['last_name']}"
+                progress.progress(
+                    int((idx + 1) / len(with_email) * 100),
+                    text=f"📤 Sending to {name}... ({idx+1}/{len(with_email)})"
+                )
+                personalized_msg = build_message(template_body, student, custom_msg)
+                payload = {
+                    'student_id':         student['id'],
+                    'communication_type': 'Custom',
+                    'custom_subject':     template_subject,
+                    'custom_message':     personalized_msg,
+                    'extra_data':         {}
+                }
+                result = api_post("/communications/send", payload)
+                if result.get('status') == 'success':
+                    success_count += 1
+                    results_log.append({'Student': name, 'Email': student['parent_email'], 'Status': '✅ Sent'})
+                else:
+                    fail_count += 1
+                    results_log.append({'Student': name, 'Email': student['parent_email'], 'Status': '❌ Failed'})
+
+            progress.progress(100, text="✅ Done!")
+            st.success(f"✅ Done! **{success_count}** sent | **{fail_count}** failed")
+            if success_count > 0:
+                st.balloons()
+
+            st.dataframe(pd.DataFrame(results_log), width='stretch', hide_index=True)

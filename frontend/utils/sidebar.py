@@ -3,7 +3,7 @@ ScholarSense - Shared Sidebar Navigation
 Import and call render_sidebar() at the top of every page
 """
 import streamlit as st
-from frontend.utils.session_manager import SessionManager, ENABLE_SESSION_PERSISTENCE
+from frontend.utils.session_manager import SessionManager
 
 def render_sidebar():
     """Render grouped navigation sidebar with user info"""
@@ -140,13 +140,4 @@ def render_sidebar():
         show_shortcut_hints()
         inject_keyboard_shortcuts()
 
-        # ── Session Info (Development) ──────────────────────────
-        st.divider()
-        session_status = "🔒 Enabled" if ENABLE_SESSION_PERSISTENCE else "🔓 Disabled (Fresh Login)"
-        st.markdown(f"""
-        <div style='font-size:0.75rem; color:#6b7280; padding:0.5rem; background:#f8fafc; border-radius:8px; border-left:3px solid #2563eb;'>
-            <strong>Session Persistence:</strong> {session_status}<br>
-            To enable persistent sessions (keep logged in), set:<br>
-            <code style='background:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;'>ENABLE_SESSION_PERSISTENCE=true</code>
-        </div>
-        """, unsafe_allow_html=True)
+       
