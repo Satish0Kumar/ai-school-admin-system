@@ -80,7 +80,9 @@ def api_put(endpoint, payload):
 
 def get_students_list():
     """Fetch all active students for dropdown"""
-    res = api_get("/students")
+    res = api_get("/students", params={"per_page": 500})
+    if isinstance(res, dict) and 'students' in res:
+        return res['students']
     if isinstance(res, list):
         return res
     return []

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Marks Entry Module
 ScholarSense - AI-Powered Academic Intelligence System
 Enhancement 6: Marks Entry - Enter Marks, Analytics, Failed Students
@@ -151,15 +151,20 @@ def api_put(endpoint, payload):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+
 def get_students_by_grade(grade, section=None):
-    """Fetch students filtered by grade/section"""
-    params = {"grade": grade}
+    params = {"grade": grade, "per_page": 200}   # fetch up to 200 students
     if section and section != 'All':
         params['section'] = section
     res = api_get("/students", params=params)
+    # API returns paginated dict: {"students": [...], "pagination": {...}}
+    if isinstance(res, dict) and 'students' in res:
+        return res['students']
+    # Fallback: if plain list returned (old API format)
     if isinstance(res, list):
         return res
     return []
+
 
 def score_color(score):
     """Return pass/fail CSS class"""
