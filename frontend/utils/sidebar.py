@@ -98,7 +98,7 @@ def render_sidebar():
         if role == "admin":
             st.markdown("")
             st.markdown("**⚙️ ADMIN**")
-            st.page_link("pages/14_👤_User_Management.py", label="  User Management", icon="👤")
+            st.page_link("pages/13_👤_User_Management.py", label="  User Management", icon="👤")
 
         # ── Bottom: User Info + Logout ─────────────────────────
         st.divider()
