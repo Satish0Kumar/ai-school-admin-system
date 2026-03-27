@@ -144,7 +144,7 @@ class AuthService:
         Called after OTP verification is complete.
         Returns: dict with access_token and user info
         """
-        db = next(get_db())
+        db = SessionLocal()
         try:
             user = db.query(User).filter(
                 User.id == user_id,
@@ -158,7 +158,7 @@ class AuthService:
             user.last_login = datetime.utcnow()
             db.commit()
 
-            # Create JWT token
+            # Create JWT tokens
             access_token = create_access_token(
                 identity=str(user.id),
                 additional_claims={
@@ -168,10 +168,20 @@ class AuthService:
                 },
                 expires_delta=timedelta(hours=8)
             )
+            refresh_token = create_refresh_token(
+                identity=str(user.id),
+                additional_claims={
+                    'role' : user.role,
+                    'email': user.email,
+                    'name' : user.full_name
+                },
+                expires_delta=timedelta(days=30)  # Longer expiry for refresh
+            )
 
             return {
-                'access_token': access_token,
-                'user'        : user.to_dict()
+                'access_token' : access_token,
+                'refresh_token': refresh_token,
+                'user'         : user.to_dict()
             }
 
         except Exception as e:

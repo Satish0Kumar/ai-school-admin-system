@@ -50,6 +50,10 @@ VALID_SES = ['Low', 'Medium', 'High']
 VALID_PARENT_EDU = ['None', 'High School', 'Graduate', 'Post-Graduate']
 VALID_GRADES = [6, 7, 8, 9, 10]  # Grades 6-10 only (per schema and training data)
 
+# API Configuration
+API_HOST = os.getenv("API_HOST", "127.0.0.1")
+API_PORT = int(os.getenv("API_PORT", 5000))
+
 print(f"✓ Configuration loaded")
 print(f"  Model directory: {MODEL_DIR}")
 print(f"  API will run on: {API_HOST}:{API_PORT}")

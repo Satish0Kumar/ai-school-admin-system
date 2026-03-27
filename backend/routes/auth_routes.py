@@ -1,6 +1,6 @@
 # backend/routes/auth_routes.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, create_refresh_token, get_jwt
 from datetime import timedelta
 import json
 import time
@@ -215,7 +215,7 @@ def get_current_user_info():
 # POST /api/auth/refresh
 # ============================================
 @auth_bp.route('/api/auth/refresh', methods=['POST'])
-@jwt_required()
+@jwt_required(refresh=True)
 def refresh_token():
     try:
         # Get current user identity and claims

@@ -26,7 +26,7 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table,
-    TableStyle, HRFlowable, PageBreak
+    TableStyle, HRFlowable
 )
 
 # Project imports
@@ -739,7 +739,7 @@ class PDFService:
                 color=MED_GRAY, spaceAfter=6
             ))
             elements.append(Paragraph(
-                f"🏫 Greenwood High School  •  ScholarSense v2.0  •  "
+                f"🏫 {SCHOOL_NAME}  •  ScholarSense v2.0  •  "
                 f"Confidential — For Internal Use Only",
                 styles['small']
             ))
@@ -912,7 +912,7 @@ class PDFService:
                 color=MED_GRAY, spaceAfter=6
             ))
             elements.append(Paragraph(
-                f"🏫 Greenwood High School  •  ScholarSense v2.0  •  "
+                f"🏫 {SCHOOL_NAME}  •  ScholarSense v2.0  •  "
                 f"Confidential — For Internal Use Only",
                 styles['small']
             ))

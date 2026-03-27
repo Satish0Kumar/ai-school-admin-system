@@ -451,7 +451,12 @@ class PredictionService:
 
 
 # Initialize model on import
-PredictionService.load_model()
+try:
+    PredictionService.load_model()
+except Exception as e:
+    print(f"⚠️  Warning: Could not load ML model on startup: {e}")
+    print("   This is normal if models/ directory is missing.")
+    print("   Predictions will use dummy fallback values.")
 
 # Test function
 if __name__ == "__main__":
