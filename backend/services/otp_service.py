@@ -16,7 +16,7 @@ import json
 import time
 from datetime import datetime, timedelta
 from collections import defaultdict
-from backend.database.db_config import SessionLocal
+from backend.database.db_config import SessionLocal, get_db
 from backend.database.models import OtpToken, User
 
 
@@ -252,7 +252,10 @@ class OtpService:
         Returns:
             dict with status: 'valid' | 'invalid' | 'expired' | 'locked'
         """
-        db = SessionLocal()
+        try:
+            db = SessionLocal()
+        except NameError:
+            db = next(get_db())
         try:
             now = datetime.utcnow()
 
@@ -389,7 +392,10 @@ class OtpService:
         Delete all expired OTPs from database.
         Call this periodically to keep the table clean.
         """
-        db = SessionLocal()
+        try:
+            db = SessionLocal()
+        except NameError:
+            db = next(get_db())
         try:
             expired = db.query(OtpToken).filter(
                 OtpToken.expires_at < datetime.utcnow()
