@@ -368,6 +368,22 @@ class OtpService:
 
     # ──────────────────────────────────────────────────────────────────────────
     @staticmethod
+    def get_latest_otp(user_id: int):
+        """
+        Get the most recent OTP for a user.
+        Returns: OtpToken object or None
+        """
+        db = SessionLocal()
+        try:
+            otp = db.query(OtpToken).filter(
+                OtpToken.user_id == user_id
+            ).order_by(OtpToken.created_at.desc()).first()
+            return otp
+        finally:
+            db.close()
+
+    # ──────────────────────────────────────────────────────────────────────────
+    @staticmethod
     def cleanup_expired_otps():
         """
         Delete all expired OTPs from database.

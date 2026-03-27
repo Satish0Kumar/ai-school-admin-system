@@ -1,7 +1,7 @@
 # backend/routes/auth_routes.py
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, create_refresh_token, get_jwt
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import time
 
@@ -137,6 +137,11 @@ def resend_otp():
         user = AuthService.get_user_by_id(user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
+
+        # Check cooldown - prevent spam resend
+        last_otp = OtpService.get_latest_otp(user_id)
+        if last_otp and (datetime.utcnow() - last_otp.created_at).total_seconds() < 60:
+            return jsonify({'error': 'Please wait 60 seconds before requesting a new OTP'}), 429
 
         otp_data = OtpService.create_otp(user_id)
         if 'error' in otp_data:
