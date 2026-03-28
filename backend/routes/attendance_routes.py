@@ -16,12 +16,9 @@ def mark_attendance():
         claims = get_jwt()
         if claims.get('role') not in ['admin', 'teacher']:
             return jsonify({'error': 'Admin or Teacher access required'}), 403
-
         data = request.get_json()
-        required = ['student_id', 'date', 'status']
-        if not all(field in data for field in required):
+        if not all(f in data for f in ['student_id', 'date', 'status']):
             return jsonify({'error': 'Missing required fields'}), 400
-
         current_user = get_jwt_identity()
         result = AttendanceService.mark_attendance(
             student_id      = data['student_id'],
@@ -45,21 +42,52 @@ def mark_bulk_attendance():
         claims = get_jwt()
         if claims.get('role') not in ['admin', 'teacher']:
             return jsonify({'error': 'Admin or Teacher access required'}), 403
-
         data            = request.get_json()
         attendance_list = data.get('attendance_list', [])
-
         if not attendance_list:
             return jsonify({'error': 'No attendance data provided'}), 400
-
         current_user = get_jwt_identity()
         result = AttendanceService.mark_bulk_attendance(
-            attendance_list = attendance_list,
-            marked_by       = current_user
+            attendance_list=attendance_list, marked_by=current_user
         )
         if 'error' in result:
             return jsonify(result), 400
         return jsonify(result), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# PUT /api/attendance/<attendance_id>  — Edit Attendance tab
+@attendance_bp.route('/api/attendance/<int:attendance_id>', methods=['PUT'])
+@jwt_required()
+def update_attendance(attendance_id):
+    try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+        data = request.get_json()
+        if not data or 'status' not in data:
+            return jsonify({'error': 'status field is required'}), 400
+        result = AttendanceService.update_attendance(attendance_id, data)
+        if 'error' in result:
+            return jsonify(result), 404
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# DELETE /api/attendance/<attendance_id>  — Edit Attendance tab
+@attendance_bp.route('/api/attendance/<int:attendance_id>', methods=['DELETE'])
+@jwt_required()
+def delete_attendance(attendance_id):
+    try:
+        claims = get_jwt()
+        if claims.get('role') not in ['admin', 'teacher']:
+            return jsonify({'error': 'Admin or Teacher access required'}), 403
+        result = AttendanceService.delete_attendance(attendance_id)
+        if 'error' in result:
+            return jsonify(result), 404
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -71,16 +99,12 @@ def get_student_attendance(student_id):
     try:
         start_date = request.args.get('start_date')
         end_date   = request.args.get('end_date')
-
         if start_date:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         if end_date:
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-
         records = AttendanceService.get_student_attendance(
-            student_id = student_id,
-            start_date = start_date,
-            end_date   = end_date
+            student_id=student_id, start_date=start_date, end_date=end_date
         )
         return jsonify(records), 200
     except Exception as e:
@@ -93,10 +117,7 @@ def get_student_attendance(student_id):
 def get_attendance_stats(student_id):
     try:
         days  = int(request.args.get('days', 30))
-        stats = AttendanceService.get_attendance_stats(
-            student_id = student_id,
-            days       = days
-        )
+        stats = AttendanceService.get_attendance_stats(student_id=student_id, days=days)
         return jsonify(stats), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -115,29 +136,21 @@ def get_daily_attendance():
             return jsonify({'error': 'Date parameter required'}), 400
 
         attendance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-
         grade = None
-        if grade_str and grade_str != 'None':
+        if grade_str and grade_str not in ('None', ''):
             try:
                 grade = int(grade_str)
-            except:
+            except ValueError:
                 grade = None
-
-        if section == 'None' or not section:
+        if section in ('None', '', None):
             section = None
 
-        print(f"🔍 API: date={attendance_date}, grade={grade}, section={section}")
         results = AttendanceService.get_daily_attendance(
-            attendance_date = attendance_date,
-            grade           = grade,
-            section         = section
+            attendance_date=attendance_date, grade=grade, section=section
         )
-        print(f"✅ API: Returning {len(results)} students")
         return jsonify(results), 200
     except Exception as e:
-        print(f"❌ Daily attendance error: {e}")
-        import traceback
-        traceback.print_exc()
+        import traceback; traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
@@ -149,10 +162,8 @@ def get_low_attendance_students():
         threshold = float(request.args.get('threshold', 75.0))
         days      = int(request.args.get('days', 30))
         results   = AttendanceService.get_low_attendance_students(
-            threshold = threshold,
-            days      = days
+            threshold=threshold, days=days
         )
         return jsonify(results), 200
     except Exception as e:
-        print(f"❌ Low attendance error: {e}")
         return jsonify({'error': str(e)}), 500
